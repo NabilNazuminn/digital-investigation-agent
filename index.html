@@ -434,8 +434,10 @@
 
     <!-- LOGIC -->
     <script>
-        // Ganti ini kalau backend jalan di host/port lain (misal pas deploy).
-        const API_BASE_URL = "http://127.0.0.1:8000";
+        // Auto-detect backend URL: localhost/file:// uses local port 8000, production uses relative origin.
+        const API_BASE_URL = (window.location.protocol === "file:" || window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost")
+            ? "http://127.0.0.1:8000"
+            : "";
 
         // Presets sekarang cuma ngisi form -- hasil analisisnya beneran dari
         // backend (bukan mockReport hardcoded lagi seperti sebelumnya).
