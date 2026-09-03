@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+import logging
+
 from app.database import get_db
 from app.models.schemas import InvestigationRequest
 from app.services.ai_agent_client import run_investigation
@@ -21,12 +23,11 @@ from app.services.ocr_processor import OCRError, extract_text_from_screenshot
 from app.services.validation import ValidationError, validate_request
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 class BatchDeleteRequest(BaseModel):
     ids: list[str]
-
-
 
 
 @router.post("/investigate")
@@ -71,9 +72,31 @@ def investigate(req: InvestigationRequest, db: Session = Depends(get_db)):
     )
 
     context = build_unified_context(req.chat_text, extracted, verification)
-    report = run_investigation(context)
+    try:
+        report = run_investigation(context)
+    except Exception as exc:  # noqa: BLE001 -- AI Agent module bisa lempar berbagai jenis error jaringan/API
+        logger.error("AI Agent gagal melakukan analisis: %s", exc)
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Gagal menghubungi layanan AI (Gemini) untuk analisis. Ini biasanya "
+                "masalah koneksi internet sementara -- coba jalankan analisis lagi. "
+                f"Detail: {exc}"
+            ),
+        ) from exc
 
-    save_investigation(db, req.chat_text, screenshot_path, report)
+    # Hasil analisis AI ini sudah "jadi" -- jangan sampai gagal simpan ke
+    # riwayat (misal koneksi DB Neon sempat putus) bikin hasil yang sudah
+    # sukses ini ikut ke-buang jadi error 500 ke frontend. Simpan ke DB tetap
+    # dicoba, tapi kalau gagal, tetap return laporan aslinya ke user --
+    # cuma dikasih tanda kalau riwayatnya gak sempat kesimpan.
+    try:
+        save_investigation(db, req.chat_text, screenshot_path, report)
+    except Exception as exc:  # noqa: BLE001 -- sengaja luas, ini fallback terakhir biar hasil AI gak hilang
+        logger.error("Gagal simpan riwayat investigasi ke database: %s", exc)
+        db.rollback()
+        report["history_saved"] = False
+        report["history_warning"] = "Hasil analisis berhasil, tapi gagal disimpan ke riwayat (masalah koneksi database)."
 
     if ocr_warning:
         report["ocr_warning"] = ocr_warning  # info transparansi ke frontend, bukan error fatal

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 @dataclass
 class GeminiConfig:
     api_key: str
-    model_name: str = "gemini-3.5-flash"
+    model_name: str = "gemini-3.6-flash"
     temperature: float = 0.2
     top_p: float = 0.8
     max_output_tokens: int = 4096
@@ -19,7 +19,7 @@ def load_config() -> GeminiConfig:
             "Set environment variable: set GEMINI_API_KEY='your-key'"
         )
 
-    model = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
+    model = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
     temp = float(os.getenv("GEMINI_TEMPERATURE", "0.2"))
 
     return GeminiConfig(api_key=api_key, model_name=model, temperature=temp)

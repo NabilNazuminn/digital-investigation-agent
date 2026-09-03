@@ -12,6 +12,7 @@
             theme: {
                 extend: {
                     colors: {
+                        // Dark Mode Palette (Oliviera System)
                         neutral: '#08080A',
                         background: '#131315',
                         surface: '#0D0E11',
@@ -19,6 +20,8 @@
                         tertiary: '#22252B',
                         'text-muted': '#A1A5AB',
                         'border-subtle': 'rgba(255, 255, 255, 0.1)',
+                        
+                        // Light Mode Palette
                         'light-bg': '#F4F4F6',
                         'light-surface': '#FFFFFF',
                         'light-secondary': '#EAEAEE',
@@ -33,21 +36,62 @@
             }
         }
     </script>
+    <!-- Font Awesome Icons CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts: Inter & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s ease, color 0.3s ease; }
-        .code-font { font-family: 'JetBrains Mono', monospace; }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        .dark ::-webkit-scrollbar-thumb { background: #22252B; border-radius: 9999px; }
-        ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 9999px; }
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #22252B;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #D1D5DB;
+            border-radius: 9999px;
+        }
+
+        /* Cuma area laporan (#print-report-area) yang ke-print, sisanya
+           disembunyiin -- termasuk tombol Print/Tutup sendiri (.no-print). */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #print-report-area, #print-report-area * {
+                visibility: visible;
+            }
+            #print-report-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between bg-light-bg dark:bg-[#08080A] text-slate-900 dark:text-white selection:bg-black selection:text-white dark:selection:bg-white dark:selection:text-black">
 
+    <!-- FLOATING GLASSBAR HEADER -->
     <header class="sticky top-4 z-50 max-w-7xl mx-auto px-4 w-full">
         <div class="bg-white/80 dark:bg-[#16181C]/80 backdrop-blur-md border border-light-border dark:border-white/10 rounded-full px-6 h-14 flex items-center justify-between shadow-sm dark:shadow-none transition-all">
             <div class="flex items-center space-x-3">
@@ -57,7 +101,9 @@
                 <span class="font-medium text-sm tracking-tight text-slate-900 dark:text-white">Digital Investigation Agent</span>
             </div>
 
+            <!-- Header Right Controls -->
             <div class="flex items-center space-x-3">
+                <!-- Status Indicator -->
                 <div class="hidden sm:flex items-center space-x-3 text-[11px] code-font text-light-text-muted dark:text-text-muted">
                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-light-secondary dark:bg-[#0D0E11] border border-light-border dark:border-white/10">
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
@@ -65,6 +111,7 @@
                     </span>
                 </div>
 
+                <!-- Dark / Light Theme Toggle Button -->
                 <button onclick="toggleTheme()" id="theme-toggle-btn" class="flex items-center justify-center w-9 h-9 rounded-full bg-light-secondary dark:bg-[#0D0E11] border border-light-border dark:border-white/10 text-slate-700 dark:text-white hover:opacity-80 transition-all" title="Ubah Mode Tampilan">
                     <i id="theme-icon" class="fa-solid fa-moon text-xs"></i>
                 </button>
@@ -72,8 +119,10 @@
         </div>
     </header>
 
+    <!-- MAIN CONTENT -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow w-full">
 
+        <!-- NAV TABS -->
         <div class="flex space-x-2 border-b border-light-border dark:border-white/10 mb-8 pb-3">
             <button onclick="switchTab('investigate')" id="tab-investigate" class="tab-btn px-4 py-2 text-xs font-medium rounded-full bg-black dark:bg-white text-white dark:text-black transition-all">
                 Investigasi Kasus
@@ -81,19 +130,25 @@
             <button onclick="switchTab('presets')" id="tab-presets" class="tab-btn px-4 py-2 text-xs font-medium rounded-full text-light-text-muted dark:text-text-muted hover:text-slate-900 dark:hover:text-white transition-all">
                 Contoh Presets
             </button>
+            <button onclick="switchTab('architecture')" id="tab-architecture" class="tab-btn px-4 py-2 text-xs font-medium rounded-full text-light-text-muted dark:text-text-muted hover:text-slate-900 dark:hover:text-white transition-all">
+                Arsitektur System
+            </button>
             <button onclick="switchTab('riwayat')" id="tab-riwayat" class="tab-btn px-4 py-2 text-xs font-medium rounded-full text-light-text-muted dark:text-text-muted hover:text-slate-900 dark:hover:text-white transition-all">
                 Riwayat
             </button>
         </div>
 
+        <!-- TAB 1: INVESTIGATE -->
         <div id="view-investigate" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
+            <!-- LEFT FORM -->
             <div class="lg:col-span-5 space-y-6">
                 <div class="bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 rounded-2xl p-6 shadow-sm dark:shadow-none transition-all">
                     <h2 class="text-base font-medium text-slate-900 dark:text-white mb-1">Input Bukti</h2>
                     <p class="text-xs text-light-text-muted dark:text-text-muted mb-6">Unggah bukti gambar atau masukkan parameter yang dicurigai.</p>
 
                     <form id="investigation-form" onsubmit="handleInvestigate(event)" class="space-y-4">
+                        <!-- Upload -->
                         <div>
                             <label class="block text-[11px] code-font text-light-text-muted dark:text-text-muted uppercase tracking-wider mb-2">Bukti Gambar (OCR)</label>
                             <div id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleFileDrop(event)" class="border border-dashed border-slate-300 dark:border-white/15 bg-light-secondary dark:bg-[#16181C] hover:border-slate-400 dark:hover:border-white/30 rounded-xl p-4 text-center cursor-pointer transition-all">
@@ -114,18 +169,23 @@
                             </div>
                         </div>
 
+                        <!-- Text Input -->
                         <div>
                             <label class="block text-[11px] code-font text-light-text-muted dark:text-text-muted uppercase tracking-wider mb-2">Teks Percakapan</label>
                             <textarea id="input-text" rows="3" class="w-full bg-light-secondary dark:bg-[#16181C] border border-light-border dark:border-white/10 rounded-xl p-3 text-xs text-slate-900 dark:text-white placeholder-light-text-muted dark:placeholder-text-muted focus:outline-none focus:border-slate-400 dark:focus:border-white/30 transition-all" placeholder="Masukkan narasi pesan/chat..."></textarea>
                         </div>
 
+                        <!-- Specific Inputs -->
                         <div class="space-y-3 pt-2">
                             <input type="text" id="input-url" class="w-full bg-light-secondary dark:bg-[#16181C] border border-light-border dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-light-text-muted dark:placeholder-text-muted focus:outline-none focus:border-slate-400 dark:focus:border-white/30 transition-all" placeholder="URL Target">
+                            
                             <input type="text" id="input-account" class="w-full bg-light-secondary dark:bg-[#16181C] border border-light-border dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-light-text-muted dark:placeholder-text-muted focus:outline-none focus:border-slate-400 dark:focus:border-white/30 transition-all" placeholder="No. Rekening">
+
                             <input type="text" id="input-phone" class="w-full bg-light-secondary dark:bg-[#16181C] border border-light-border dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-light-text-muted dark:placeholder-text-muted focus:outline-none focus:border-slate-400 dark:focus:border-white/30 transition-all" placeholder="No. Telepon / WA">
                             <input type="text" id="input-email" class="w-full bg-light-secondary dark:bg-[#16181C] border border-light-border dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-light-text-muted dark:placeholder-text-muted focus:outline-none focus:border-slate-400 dark:focus:border-white/30 transition-all" placeholder="Alamat Email">
                         </div>
 
+                        <!-- Actions -->
                         <div class="pt-4 flex items-center space-x-2">
                             <button type="submit" id="btn-submit" class="flex-1 bg-black hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-black font-medium py-2.5 px-4 rounded-full text-xs transition-all">
                                 Jalankan Analisis AI
@@ -138,8 +198,10 @@
                 </div>
             </div>
 
+            <!-- RIGHT PANEL -->
             <div class="lg:col-span-7 space-y-6">
 
+                <!-- IDLE -->
                 <div id="state-idle" class="bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 rounded-2xl p-12 text-center flex flex-col items-center justify-center min-h-[440px] shadow-sm dark:shadow-none transition-all">
                     <div class="w-12 h-12 rounded-full bg-light-secondary dark:bg-[#16181C] border border-light-border dark:border-white/10 flex items-center justify-center mb-3 text-light-text-muted dark:text-text-muted">
                         <i class="fa-solid fa-terminal text-sm"></i>
@@ -147,6 +209,7 @@
                     <p class="text-xs text-light-text-muted dark:text-text-muted">Masukkan parameter di sebelah kiri atau gunakan pilihan <strong>Presets</strong>.</p>
                 </div>
 
+                <!-- LOADING -->
                 <div id="state-loading" class="hidden bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 rounded-2xl p-6 space-y-6 shadow-sm dark:shadow-none transition-all">
                     <div class="flex items-center justify-between border-b border-light-border dark:border-white/10 pb-4">
                         <div class="flex items-center space-x-3">
@@ -166,8 +229,8 @@
                             <span class="step-status code-font text-light-text-muted dark:text-text-muted">Pending</span>
                         </div>
                         <div id="step-3" class="p-3 rounded-xl bg-light-secondary dark:bg-[#16181C] border border-light-border dark:border-white/5 flex items-center justify-between">
-                            <span class="text-light-text-muted dark:text-text-muted">3. LLM Reasoning (Gemini)</span>
                             <span class="step-status code-font text-light-text-muted dark:text-text-muted">Pending</span>
+                            <span class="text-light-text-muted dark:text-text-muted">3. LLM Reasoning (Gemini)</span>
                         </div>
                         <div id="step-4" class="p-3 rounded-xl bg-light-secondary dark:bg-[#16181C] border border-light-border dark:border-white/5 flex items-center justify-between">
                             <span class="text-light-text-muted dark:text-text-muted">4. Risk Scoring & Output Generation</span>
@@ -176,8 +239,10 @@
                     </div>
                 </div>
 
+                <!-- RESULT VIEW -->
                 <div id="state-result" class="hidden space-y-6">
 
+                    <!-- RISK HEADER -->
                     <div id="risk-card" class="bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 rounded-2xl p-6 relative shadow-sm dark:shadow-none transition-all">
                         <div class="flex items-center justify-between mb-4">
                             <span id="res-badge" class="px-3 py-1 rounded-full text-[10px] font-medium code-font border border-slate-300 dark:border-white/20">HIGH RISK</span>
@@ -187,6 +252,7 @@
                         <p id="res-summary" class="text-xs text-light-text-muted dark:text-text-muted leading-relaxed"></p>
                     </div>
 
+                    <!-- RED FLAGS -->
                     <div class="bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 rounded-2xl p-6 space-y-3 shadow-sm dark:shadow-none transition-all">
                         <div class="flex items-center justify-between border-b border-light-border dark:border-white/10 pb-3">
                             <span class="text-xs font-medium text-slate-900 dark:text-white">Indikator Merah (Red Flags)</span>
@@ -195,6 +261,7 @@
                         <div id="res-red-flags" class="space-y-2"></div>
                     </div>
 
+                    <!-- CONFIDENCE & MISSING EVIDENCE -->
                     <div class="bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 rounded-2xl p-6 space-y-3 shadow-sm dark:shadow-none transition-all">
                         <span class="text-xs font-medium text-slate-900 dark:text-white block border-b border-light-border dark:border-white/10 pb-3">Tingkat Keyakinan AI</span>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs" id="res-verification-grid"></div>
@@ -202,6 +269,7 @@
                     <div id="res-ocr-warning" class="hidden bg-amber-50 dark:bg-amber-500/10 border border-amber-300 dark:border-amber-500/30 rounded-2xl p-4 text-xs text-amber-800 dark:text-amber-300"></div>
                     <div id="res-history-warning" class="hidden bg-amber-50 dark:bg-amber-500/10 border border-amber-300 dark:border-amber-500/30 rounded-2xl p-4 text-xs text-amber-800 dark:text-amber-300"></div>
 
+                    <!-- REASONING & ACTIONS -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 rounded-2xl p-5 space-y-2 shadow-sm dark:shadow-none transition-all">
                             <span class="text-[11px] code-font text-light-text-muted dark:text-text-muted uppercase block">Penalaran AI</span>
@@ -213,10 +281,26 @@
                         </div>
                     </div>
 
-                    <div class="bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 rounded-2xl p-4 flex items-center justify-between shadow-sm dark:shadow-none transition-all">
-                        <button onclick="downloadReport()" class="px-4 py-2 bg-light-secondary hover:bg-slate-200 dark:bg-[#16181C] dark:hover:bg-[#22252B] border border-light-border dark:border-white/10 text-xs rounded-full text-slate-900 dark:text-white transition-all flex items-center gap-2">
-                            <i class="fa-solid fa-download text-xs"></i> Download Laporan (JSON)
-                        </button>
+                    <!-- EXPORT & JSON -->
+                    <div class="bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 rounded-2xl p-4 flex items-center justify-between shadow-sm dark:shadow-none transition-all flex-wrap gap-2">
+                        <div class="flex items-center space-x-2 flex-wrap gap-2">
+                            <button onclick="openReportView()" class="px-3 py-1.5 bg-black hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-black text-xs rounded-full transition-all">
+                                <i class="fa-solid fa-file-lines mr-1"></i>Buat Laporan
+                            </button>
+                            <button id="res-report-channel-btn" onclick="openChannelHelper()" class="hidden px-3 py-1.5 bg-light-secondary hover:bg-slate-200 dark:bg-[#16181C] dark:hover:bg-[#22252B] border border-light-border dark:border-white/10 text-xs rounded-full text-slate-900 dark:text-white transition-all">
+                                <i class="fa-solid fa-landmark mr-1"></i>Lapor ke cekrekening.id
+                            </button>
+                            <button onclick="toggleJsonView()" class="px-3 py-1.5 bg-light-secondary hover:bg-slate-200 dark:bg-[#16181C] dark:hover:bg-[#22252B] border border-light-border dark:border-white/10 text-xs rounded-full text-slate-900 dark:text-white transition-all">
+                                JSON Output
+                            </button>
+                            <button onclick="downloadReport()" class="px-3 py-1.5 bg-light-secondary hover:bg-slate-200 dark:bg-[#16181C] dark:hover:bg-[#22252B] border border-light-border dark:border-white/10 text-xs rounded-full text-slate-900 dark:text-white transition-all">
+                                Download
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="json-box" class="hidden bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 rounded-2xl p-4">
+                        <pre id="raw-json" class="code-font text-[11px] text-light-text-muted dark:text-text-muted bg-light-secondary dark:bg-[#16181C] p-4 rounded-xl overflow-x-auto max-h-64 border border-light-border dark:border-white/5"></pre>
                     </div>
 
                 </div>
@@ -225,6 +309,7 @@
 
         </div>
 
+        <!-- TAB 2: PRESETS -->
         <div id="view-presets" class="hidden space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 hover:border-slate-400 dark:hover:border-white/30 rounded-2xl p-5 space-y-3 cursor-pointer shadow-sm dark:shadow-none transition-all" onclick="loadPreset(1)">
@@ -245,23 +330,40 @@
             </div>
         </div>
 
-        <div id="view-riwayat" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div class="lg:col-span-5 space-y-3">
-                <div class="flex items-center justify-between gap-2">
-                    <h2 class="text-sm font-medium text-slate-900 dark:text-white flex-1">Riwayat Investigasi</h2>
-                    <div class="flex items-center gap-1.5">
-                        <button id="btn-delete-selected" onclick="deleteSelected()" title="Hapus Terpilih" class="hidden px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-600 dark:text-red-400 text-[11px] rounded-full transition-all flex items-center gap-1">
-                            <i class="fa-solid fa-trash-can text-[10px]"></i> Hapus (<span id="selected-count">0</span>)
-                        </button>
-                        <button onclick="deleteAllHistory()" title="Hapus Semua Riwayat" class="px-2.5 py-1.5 bg-light-secondary hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-600 dark:hover:text-red-400 border border-light-border dark:border-white/10 text-[11px] rounded-full text-slate-700 dark:text-text-muted transition-all flex items-center gap-1">
-                            <i class="fa-solid fa-trash text-[10px]"></i> Hapus Semua
-                        </button>
-                        <button onclick="loadHistory()" title="Refresh" class="px-2.5 py-1.5 bg-light-secondary hover:bg-slate-200 dark:bg-[#16181C] dark:hover:bg-[#22252B] border border-light-border dark:border-white/10 text-[11px] rounded-full text-slate-900 dark:text-white transition-all">
-                            <i class="fa-solid fa-rotate-right text-[10px]"></i>
-                        </button>
+        <!-- TAB 3: ARCHITECTURE -->
+        <div id="view-architecture" class="hidden">
+            <div class="bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 rounded-2xl p-6 space-y-6 shadow-sm dark:shadow-none transition-all">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-light-secondary dark:bg-[#16181C] border border-light-border dark:border-white/10 rounded-xl p-5 space-y-3">
+                        <span class="text-xs font-medium text-slate-900 dark:text-white block">Backend Scope (FastAPI)</span>
+                        <ul class="text-xs text-light-text-muted dark:text-text-muted space-y-2">
+                            <li>• Input Receiver & Validation</li>
+                            <li>• OCR Processor & Information Extractor</li>
+                            <li>• External Reputation Checks</li>
+                            <li>• Evidence Aggregator (UnifiedContext)</li>
+                        </ul>
+                    </div>
+                    <div class="bg-light-secondary dark:bg-[#16181C] border border-light-border dark:border-white/10 rounded-xl p-5 space-y-3">
+                        <span class="text-xs font-medium text-slate-900 dark:text-white block">AI Agent Core (Gemini Module)</span>
+                        <ul class="text-xs text-light-text-muted dark:text-text-muted space-y-2">
+                            <li>• Context Analysis via Gemini LLM</li>
+                            <li>• Risk Scoring Calculation</li>
+                            <li>• Structured JSON Report Generator</li>
+                        </ul>
                     </div>
                 </div>
+            </div>
+        </div>
 
+        <!-- TAB 4: RIWAYAT -->
+        <div id="view-riwayat" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="lg:col-span-5 space-y-3">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-sm font-medium text-slate-900 dark:text-white">Riwayat Investigasi</h2>
+                    <button onclick="loadHistory()" class="px-3 py-1.5 bg-light-secondary hover:bg-slate-200 dark:bg-[#16181C] dark:hover:bg-[#22252B] border border-light-border dark:border-white/10 text-[11px] rounded-full text-slate-900 dark:text-white transition-all">
+                        <i class="fa-solid fa-rotate-right mr-1 text-[10px]"></i>Refresh
+                    </button>
+                </div>
                 <div id="history-status" class="text-xs text-light-text-muted dark:text-text-muted"></div>
                 <div id="history-list" class="space-y-2"></div>
             </div>
@@ -277,13 +379,66 @@
 
     </main>
 
+    <!-- OVERLAY: LAPORAN (buat print / save as PDF) -->
+    <div id="report-overlay" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm overflow-y-auto">
+        <div class="min-h-screen py-8 px-4 flex justify-center">
+            <div class="w-full max-w-3xl">
+                <div class="no-print flex items-center justify-end space-x-2 mb-4">
+                    <button onclick="window.print()" class="px-4 py-2 bg-black hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-black text-xs font-medium rounded-full transition-all">
+                        <i class="fa-solid fa-print mr-1"></i>Print / Save as PDF
+                    </button>
+                    <button onclick="closeReportView()" class="px-4 py-2 bg-white hover:bg-slate-100 dark:bg-[#16181C] dark:hover:bg-[#22252B] border border-light-border dark:border-white/10 text-xs font-medium rounded-full text-slate-900 dark:text-white transition-all">
+                        <i class="fa-solid fa-xmark mr-1"></i>Tutup
+                    </button>
+                </div>
+                <div id="print-report-area" class="bg-white text-slate-900 rounded-2xl shadow-xl p-8 sm:p-10 space-y-6">
+                    <!-- diisi JS lewat renderPrintReport() -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- OVERLAY: BANTUAN LAPOR KE CEKREKENING.ID -->
+    <div id="channel-overlay" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm overflow-y-auto">
+        <div class="min-h-screen py-8 px-4 flex justify-center items-start">
+            <div class="w-full max-w-xl bg-white dark:bg-[#0D0E11] border border-light-border dark:border-white/10 rounded-2xl shadow-xl p-6 space-y-5 mt-8">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Bantu Lapor ke cekrekening.id</h3>
+                    <button onclick="closeChannelHelper()" class="text-light-text-muted dark:text-text-muted hover:text-slate-900 dark:hover:text-white">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <p class="text-xs text-light-text-muted dark:text-text-muted leading-relaxed">
+                    cekrekening.id (Kominfo) belum punya API buat lapor otomatis -- kamu tetap perlu isi form-nya manual
+                    (ada CAPTCHA & verifikasi identitas pelapor). Field di bawah ini udah disiapin dari hasil analisis,
+                    tinggal disalin ke form aslinya.
+                </p>
+                <div id="channel-fields" class="space-y-3"></div>
+                <div class="bg-amber-50 dark:bg-amber-500/10 border border-amber-300 dark:border-amber-500/30 rounded-xl p-3 text-[11px] text-amber-800 dark:text-amber-300">
+                    ⚠ Kolom "Jumlah Kerugian" gak otomatis kesini -- isi manual di form aslinya sesuai kerugian kamu yang sebenarnya.
+                    Kategori tindak pidana juga cuma <b>saran awal dari AI</b> -- cek & sesuaikan lagi sebelum submit.
+                </div>
+                <button onclick="window.open('https://cekrekening.id/lapor-rekening', '_blank')" class="w-full py-2.5 bg-black hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-black text-xs font-medium rounded-full transition-all">
+                    <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>Buka Form cekrekening.id
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- FOOTER -->
     <footer class="border-t border-light-border dark:border-white/10 py-6 text-center text-xs text-light-text-muted dark:text-text-muted">
         <p>© 2026 Digital Investigation Agent</p>
     </footer>
 
+    <!-- LOGIC -->
     <script>
+        // Ganti ini kalau backend jalan di host/port lain (misal pas deploy).
         const API_BASE_URL = "http://127.0.0.1:8000";
 
+        // Presets sekarang cuma ngisi form -- hasil analisisnya beneran dari
+        // backend (bukan mockReport hardcoded lagi seperti sebelumnya).
         const PRESETS = {
             1: {
                 text: "Selamat! Anda dinyatakan LULUS Seleksi Administrasi Rekrutmen Bersama BUMN 2026. Untuk memproses kartu ujian dan seragam kerja, mohon segera melakukan pembayaran biaya verifikasi medis sebesar Rp 750.000 ke rekening bendahara panitia. Tautan: bit.ly/rekrutmen-bumn-2026",
@@ -310,12 +465,17 @@
 
         let currentActiveReport = null;
         let currentScreenshotBase64 = null;
-        let selectedHistoryIds = new Set();
-        let activeHistoryDetailId = null;
+        let currentEntities = null;       // { urls, phone_numbers, bank_accounts, emails } dari submit terakhir
+        let currentReportSource = 'live'; // 'live' (baru dianalisis) atau 'history' (dari riwayat)
+        let currentHistoryCreatedAt = null;
 
+        // Jaring pengaman: kalau file di-drop di LUAR kotak upload (misal
+        // meleset dikit), browser tetap akan coba navigasi ke file itu kalau
+        // ini gak dicegah di level window juga.
         window.addEventListener('dragover', (e) => e.preventDefault());
         window.addEventListener('drop', (e) => e.preventDefault());
 
+        // LOGIC THEME TOGGLE (DARK / LIGHT)
         function toggleTheme() {
             const html = document.documentElement;
             const icon = document.getElementById('theme-icon');
@@ -323,17 +483,29 @@
             if (html.classList.contains('dark')) {
                 html.classList.remove('dark');
                 icon.className = "fa-solid fa-sun text-xs";
-                try { localStorage.setItem('theme', 'light'); } catch (e) {}
+                try { localStorage.setItem('theme', 'light'); } catch (e) { /* localStorage bisa gak tersedia di beberapa browser/mode */ }
             } else {
                 html.classList.add('dark');
                 icon.className = "fa-solid fa-moon text-xs";
-                try { localStorage.setItem('theme', 'dark'); } catch (e) {}
+                try { localStorage.setItem('theme', 'dark'); } catch (e) { /* localStorage bisa gak tersedia di beberapa browser/mode */ }
             }
         }
 
+        // INIT THEME ON LOAD
         (function initTheme() {
             let savedTheme = null;
-            try { savedTheme = localStorage.getItem('theme'); } catch (e) {}
+            try {
+                savedTheme = localStorage.getItem('theme');
+            } catch (e) {
+                // Beberapa browser (mode privat, setting tertentu, atau saat
+                // dibuka via file://) bisa nolak akses localStorage dan
+                // lempar SecurityError di sini. Kalau ini gak ditangkap,
+                // seluruh sisa kode di bawahnya di <script> ini gak akan
+                // jalan sama sekali (termasuk pendaftaran handleInvestigate,
+                // dll) -- ini salah satu kandidat kuat penyebab tombol
+                // "Jalankan Analisis AI" gak berfungsi dan form ke-submit
+                // native oleh browser (kelihatan seperti "refresh").
+            }
             const icon = document.getElementById('theme-icon');
             if (savedTheme === 'light') {
                 document.documentElement.classList.remove('dark');
@@ -344,6 +516,14 @@
             }
         })();
 
+        // --- DEBUG SEMENTARA ---
+        // Nampilin alert kalau ada JS error yang gak ketangkep, biar ketauan
+        // persis errornya apa pas bug "tombol analisis bikin refresh" muncul
+        // lagi. Hapus blok ini kalau sudah gak dibutuhkan lagi.
+        window.addEventListener('error', function(e) {
+            alert("DEBUG - JS Error tertangkap:\n\n" + e.message + "\n\nFile: " + e.filename + "\nBaris: " + e.lineno + ":" + e.colno);
+        });
+
         function switchTab(tabId) {
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.remove('bg-black', 'text-white', 'dark:bg-white', 'dark:text-black');
@@ -351,18 +531,14 @@
             });
 
             const activeBtn = document.getElementById('tab-' + tabId);
-            if (activeBtn) {
-                activeBtn.classList.add('bg-black', 'text-white', 'dark:bg-white', 'dark:text-black');
-                activeBtn.classList.remove('text-light-text-muted', 'dark:text-text-muted');
-            }
+            activeBtn.classList.add('bg-black', 'text-white', 'dark:bg-white', 'dark:text-black');
+            activeBtn.classList.remove('text-light-text-muted', 'dark:text-text-muted');
 
-            ['investigate', 'presets', 'riwayat'].forEach(id => {
-                const el = document.getElementById('view-' + id);
-                if (el) el.classList.add('hidden');
+            ['investigate', 'presets', 'architecture', 'riwayat'].forEach(id => {
+                document.getElementById('view-' + id).classList.add('hidden');
             });
 
-            const viewEl = document.getElementById('view-' + tabId);
-            if (viewEl) viewEl.classList.remove('hidden');
+            document.getElementById('view-' + tabId).classList.remove('hidden');
 
             if (tabId === 'riwayat') {
                 loadHistory();
@@ -371,9 +547,14 @@
 
         function handleFileSelect(event) {
             const file = event.target.files[0];
-            if (file) processSelectedFile(file);
+            if (file) {
+                processSelectedFile(file);
+            }
         }
 
+        // Drag & drop: tanpa preventDefault di sini, browser bakal ambil alih
+        // "drop" dan NAVIGASI ke file yang di-drop (kelihatan kayak halaman
+        // refresh/hilang) -- ini penyebab utama bug "browser refresh" tadi.
         function handleDragOver(event) {
             event.preventDefault();
             event.stopPropagation();
@@ -390,11 +571,16 @@
             event.preventDefault();
             event.stopPropagation();
             document.getElementById('drop-zone').classList.remove('border-slate-400', 'dark:border-white/40');
+
             const file = event.dataTransfer.files[0];
-            if (file) processSelectedFile(file);
+            if (file) {
+                processSelectedFile(file);
+            }
         }
 
         function processSelectedFile(file) {
+            // Validasi ringan di sisi frontend, sesuai batas yang dipakai
+            // backend (validation.py): PNG/JPG/JPEG, maks 5 MB.
             const allowedTypes = ["image/png", "image/jpeg", "image/jpg"];
             if (!allowedTypes.includes(file.type)) {
                 alert("Format gambar tidak didukung. Gunakan PNG, JPG, atau JPEG.");
@@ -409,6 +595,9 @@
 
             const reader = new FileReader();
             reader.onload = function(e) {
+                // e.target.result sudah dalam bentuk "data:image/png;base64,..."
+                // -- ini persis format yang divalidasi & diharapkan backend
+                // di field screenshot_base64, jadi disimpan apa adanya.
                 currentScreenshotBase64 = e.target.result;
                 document.getElementById('preview-img').src = e.target.result;
                 document.getElementById('preview-name').innerText = file.name;
@@ -419,7 +608,7 @@
         }
 
         function removeFile(e) {
-            if (e && e.stopPropagation) e.stopPropagation();
+            e.stopPropagation();
             document.getElementById('file-input').value = "";
             currentScreenshotBase64 = null;
             document.getElementById('upload-placeholder').classList.remove('hidden');
@@ -438,6 +627,8 @@
             handleInvestigate(new Event('submit'));
         }
 
+        // Ubah satu input text jadi array (backend minta urls/phone_numbers/
+        // bank_accounts/emails sebagai list), buang string kosong.
         function toList(value) {
             return value && value.trim() ? [value.trim()] : [];
         }
@@ -455,7 +646,7 @@
         }
 
         function handleInvestigate(event) {
-            if (event && event.preventDefault) event.preventDefault();
+            event.preventDefault();
             const payload = buildPayload();
 
             const hasEvidence = payload.chat_text || payload.screenshot_base64 ||
@@ -482,6 +673,9 @@
                 document.getElementById('loading-timer').innerText = timer.toFixed(1) + "s";
             }, 100);
 
+            // Step 1-3 di sini murni indikator visual (backend gak kirim
+            // progress per-step secara realtime, cuma satu response di akhir),
+            // jadi dijalanin paralel sambil nunggu fetch beneran ke step 4.
             setTimeout(() => { setStepActive(1); }, 150);
             setTimeout(() => { setStepComplete(1); setStepActive(2); }, 500);
             setTimeout(() => { setStepComplete(2); setStepActive(3); }, 900);
@@ -497,6 +691,8 @@
                 const data = await response.json();
 
                 if (!response.ok) {
+                    // Backend balikin {"detail": "..."} baik untuk error validasi (422)
+                    // maupun error tak terduga (500) -- lihat validation.py & main.py.
                     throw new Error(data.detail || `Request gagal (status ${response.status}).`);
                 }
 
@@ -533,6 +729,9 @@
             stepEl.querySelector('.step-status').className = "step-status code-font text-light-text-muted dark:text-text-muted";
         }
 
+        // report = InvestigationReport asli dari backend:
+        // { risk_score, risk_level, evidence_summary, red_flags[{type,description,severity,evidence_reference}],
+        //   reasoning, recommendation[], confidence, missing_evidence[], metadata, ocr_warning? }
         function badgeClasses(level) {
             if (level === "HIGH") return "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30";
             if (level === "MEDIUM") return "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30";
@@ -541,6 +740,15 @@
 
         function renderReport(report) {
             currentActiveReport = report;
+            currentEntities = buildPayload();  // simpen entitas yang dikirim, dipakai buat Laporan & Bantu Lapor
+            currentReportSource = 'live';
+
+            const channelBtn = document.getElementById('res-report-channel-btn');
+            if (channelBtn) {
+                const showChannel = currentEntities.bank_accounts && currentEntities.bank_accounts.length &&
+                    (report.risk_level === 'HIGH' || report.risk_level === 'MEDIUM');
+                channelBtn.classList.toggle('hidden', !showChannel);
+            }
 
             document.getElementById('res-score').innerText = report.risk_score;
             const badgeEl = document.getElementById('res-badge');
@@ -571,6 +779,9 @@
                 });
             }
 
+            // Backend gak balikin detail verifikasi per-domain/rekening di top-level
+            // response -- yang dikasih cuma confidence & missing_evidence, jadi
+            // panel ini nampilin itu (bukan lagi verifikasi URL/rekening).
             const verifContainer = document.getElementById('res-verification-grid');
             verifContainer.innerHTML = `
                 <div class="bg-light-secondary dark:bg-[#16181C] p-3 rounded-xl border border-light-border dark:border-white/5 flex items-center justify-between">
@@ -610,6 +821,8 @@
             (report.recommendation || []).forEach(action => {
                 actionsContainer.innerHTML += `<li>• ${escapeHtml(action)}</li>`;
             });
+
+            document.getElementById('raw-json').innerText = JSON.stringify(report, null, 2);
         }
 
         function escapeHtml(str) {
@@ -627,6 +840,10 @@
             document.getElementById('state-idle').classList.remove('hidden');
         }
 
+        function toggleJsonView() {
+            document.getElementById('json-box').classList.toggle('hidden');
+        }
+
         function downloadReport() {
             if (!currentActiveReport) return;
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentActiveReport, null, 2));
@@ -637,6 +854,10 @@
             downloadAnchor.click();
             downloadAnchor.remove();
         }
+
+        // ---------------------------------------------------------------
+        // TAB RIWAYAT -- pakai GET /investigations & /investigations/{id}
+        // ---------------------------------------------------------------
 
         function formatDate(isoString) {
             try {
@@ -654,8 +875,6 @@
             const listEl = document.getElementById('history-list');
             statusEl.innerText = "Memuat riwayat...";
             listEl.innerHTML = "";
-            selectedHistoryIds.clear();
-            updateSelectedUI();
 
             try {
                 const response = await fetch(`${API_BASE_URL}/investigations`);
@@ -664,26 +883,20 @@
 
                 if (!records.length) {
                     statusEl.innerText = "Belum ada riwayat investigasi.";
-                    resetHistoryDetail();
                     return;
                 }
                 statusEl.innerText = `${records.length} investigasi ditemukan.`;
 
                 records.forEach(r => {
                     const item = document.createElement('div');
-                    item.className = "group relative bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 hover:border-slate-400 dark:hover:border-white/30 rounded-xl p-3.5 cursor-pointer transition-all space-y-1.5 flex items-start gap-3";
+                    item.className = "bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 hover:border-slate-400 dark:hover:border-white/30 rounded-xl p-4 cursor-pointer transition-all space-y-1";
+                    item.onclick = () => showHistoryDetail(r.id);
                     item.innerHTML = `
-                        <input type="checkbox" data-id="${r.id}" onclick="toggleSelectHistory(event, '${r.id}')" class="mt-1 rounded border-slate-300 text-black focus:ring-0 cursor-pointer">
-                        <div class="flex-1 min-w-0" onclick="showHistoryDetail('${r.id}')">
-                            <div class="flex items-center justify-between gap-2">
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-medium code-font border ${badgeClasses(r.risk_level)}">${escapeHtml(r.risk_level)} · ${r.risk_score}</span>
-                                <span class="text-[10px] text-light-text-muted dark:text-text-muted">${formatDate(r.created_at)}</span>
-                            </div>
-                            <p class="text-xs text-slate-700 dark:text-slate-200 truncate mt-1">${escapeHtml(r.chat_text_snippet || "(tanpa teks chat)")}</p>
+                        <div class="flex items-center justify-between">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-medium code-font border ${badgeClasses(r.risk_level)}">${escapeHtml(r.risk_level)} · ${r.risk_score}</span>
+                            <span class="text-[10px] text-light-text-muted dark:text-text-muted">${formatDate(r.created_at)}</span>
                         </div>
-                        <button onclick="deleteSingleHistory(event, '${r.id}')" title="Hapus item ini" class="opacity-0 group-hover:opacity-100 p-1 text-light-text-muted dark:text-text-muted hover:text-red-500 dark:hover:text-red-400 transition-all">
-                            <i class="fa-solid fa-trash-can text-xs"></i>
-                        </button>
+                        <p class="text-xs text-slate-700 dark:text-slate-200 truncate">${escapeHtml(r.chat_text_snippet || "(tanpa teks chat)")}</p>
                     `;
                     listEl.appendChild(item);
                 });
@@ -692,89 +905,7 @@
             }
         }
 
-        function toggleSelectHistory(e, id) {
-            e.stopPropagation();
-            if (e.target.checked) {
-                selectedHistoryIds.add(id);
-            } else {
-                selectedHistoryIds.delete(id);
-            }
-            updateSelectedUI();
-        }
-
-        function updateSelectedUI() {
-            const btn = document.getElementById('btn-delete-selected');
-            const countEl = document.getElementById('selected-count');
-            if (selectedHistoryIds.size > 0) {
-                btn.classList.remove('hidden');
-                countEl.innerText = selectedHistoryIds.size;
-            } else {
-                btn.classList.add('hidden');
-            }
-        }
-
-        function resetHistoryDetail() {
-            activeHistoryDetailId = null;
-            document.getElementById('history-detail').innerHTML = `
-                <div class="w-12 h-12 rounded-full bg-light-secondary dark:bg-[#16181C] border border-light-border dark:border-white/10 flex items-center justify-center mb-3 text-light-text-muted dark:text-text-muted">
-                    <i class="fa-solid fa-clock-rotate-left text-sm"></i>
-                </div>
-                <p class="text-xs text-light-text-muted dark:text-text-muted">Pilih salah satu kasus di daftar riwayat untuk lihat detail laporan.</p>
-            `;
-        }
-
-        async function deleteSingleHistory(e, id) {
-            e.stopPropagation();
-            if (!confirm("Apakah Anda yakin ingin menghapus item riwayat ini?")) return;
-
-            try {
-                const res = await fetch(`${API_BASE_URL}/investigations/${id}`, { method: 'DELETE' });
-                if (!res.ok) throw new Error(`Status ${res.status}`);
-                if (activeHistoryDetailId === id) resetHistoryDetail();
-                loadHistory();
-            } catch (err) {
-                alert("Gagal menghapus riwayat: " + err.message);
-            }
-        }
-
-        async function deleteSelected() {
-            const ids = Array.from(selectedHistoryIds);
-            if (!ids.length) return;
-            if (!confirm(`Apakah Anda yakin ingin menghapus ${ids.length} item riwayat terpilih?`)) return;
-
-            try {
-                const res = await fetch(`${API_BASE_URL}/investigations`, {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ids: ids })
-                });
-                if (!res.ok) throw new Error(`Status ${res.status}`);
-                if (selectedHistoryIds.has(activeHistoryDetailId)) resetHistoryDetail();
-                loadHistory();
-            } catch (err) {
-                alert("Gagal menghapus riwayat terpilih: " + err.message);
-            }
-        }
-
-        async function deleteAllHistory() {
-            if (!confirm("Apakah Anda yakin ingin menghapus SEMUA riwayat investigasi? Tindakan ini tidak dapat dibatalkan.")) return;
-
-            try {
-                const res = await fetch(`${API_BASE_URL}/investigations`, {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ids: [] })
-                });
-                if (!res.ok) throw new Error(`Status ${res.status}`);
-                resetHistoryDetail();
-                loadHistory();
-            } catch (err) {
-                alert("Gagal menghapus semua riwayat: " + err.message);
-            }
-        }
-
         async function showHistoryDetail(id) {
-            activeHistoryDetailId = id;
             const detailEl = document.getElementById('history-detail');
             detailEl.innerHTML = '<p class="text-xs text-light-text-muted dark:text-text-muted p-6">Memuat detail...</p>';
 
@@ -784,8 +915,27 @@
                 const record = await response.json();
                 const report = record.report;
 
+                const guessedAccount = (record.chat_text_snippet || "").match(/\b\d{8,17}\b/);
+                currentEntities = {
+                    urls: [], phone_numbers: [], emails: [],
+                    bank_accounts: guessedAccount ? [guessedAccount[0]] : []
+                };
+                currentReportSource = 'history';
+                currentActiveReport = report;
+                currentHistoryCreatedAt = record.created_at;
+
                 detailEl.innerHTML = `
-                    <div class="space-y-6 text-left">
+                    <div class="space-y-6">
+                        <div class="flex items-center space-x-2 flex-wrap gap-2">
+                            <button onclick="openReportView()" class="px-3 py-1.5 bg-black hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-black text-xs rounded-full transition-all">
+                                <i class="fa-solid fa-file-lines mr-1"></i>Buat Laporan
+                            </button>
+                            ${(currentEntities.bank_accounts.length && (report.risk_level === 'HIGH' || report.risk_level === 'MEDIUM')) ? `
+                            <button onclick="openChannelHelper()" class="px-3 py-1.5 bg-light-secondary hover:bg-slate-200 dark:bg-[#16181C] dark:hover:bg-[#22252B] border border-light-border dark:border-white/10 text-xs rounded-full text-slate-900 dark:text-white transition-all">
+                                <i class="fa-solid fa-landmark mr-1"></i>Lapor ke cekrekening.id
+                            </button>` : ''}
+                        </div>
+
                         <div class="bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 rounded-2xl p-6 space-y-2">
                             <div class="flex items-center justify-between mb-2">
                                 <span class="px-3 py-1 rounded-full text-[10px] font-medium code-font border ${badgeClasses(report.risk_level)}">${escapeHtml(report.risk_level)} RISK</span>
@@ -823,6 +973,195 @@
             } catch (err) {
                 detailEl.innerHTML = '<p class="text-xs text-red-500 p-6">Gagal memuat detail investigasi.</p>';
             }
+        }
+
+        // ---------------------------------------------------------------
+        // LAPORAN (print / save as PDF) & BANTUAN LAPOR KE CEKREKENING.ID
+        // ---------------------------------------------------------------
+
+        // Kata kunci kasar buat nyaranin kategori tindak pidana cekrekening.id
+        // dari red_flags/reasoning -- ini cuma SARAN AWAL, bukan keputusan
+        // final (user tetap harus cek & sesuaikan sendiri di form aslinya).
+        const CEKREKENING_CATEGORIES = [
+            { match: ["investasi", "trading", "profit", "cuan"], label: "Investasi Online Fiktif" },
+            { match: ["judi", "slot", "togel"], label: "Judi Online" },
+            { match: ["pinjaman", "pinjol"], label: "Pinjaman Online" },
+            { match: ["phishing", "malware", "apk", "login", "verifikasi akun"], label: "Web Phising / Social Engineering" },
+            { match: ["pemerasan", "ancam"], label: "Pemerasan" },
+            { match: ["lowongan", "rekrutmen", "kerja"], label: "Penipuan Jual Beli Online" },
+        ];
+
+        function suggestCategory(report) {
+            const haystack = (
+                (report.evidence_summary || "") + " " +
+                (report.reasoning || "") + " " +
+                (report.red_flags || []).map(f => f.type + " " + f.description).join(" ")
+            ).toLowerCase();
+
+            for (const cat of CEKREKENING_CATEGORIES) {
+                if (cat.match.some(kw => haystack.includes(kw))) {
+                    return cat.label;
+                }
+            }
+            return "Penipuan Jual Beli Online"; // fallback paling umum
+        }
+
+        function buildKronologi(report, entities) {
+            const parts = [];
+            if (entities && entities.chat_text) {
+                parts.push(`Pesan/percakapan yang diterima:\n"${entities.chat_text}"`);
+            }
+            parts.push(`Hasil analisis AI (skor risiko ${report.risk_score}/100, level ${report.risk_level}):\n${report.evidence_summary}`);
+            if (report.red_flags && report.red_flags.length) {
+                parts.push("Indikator yang ditemukan:\n" + report.red_flags.map(f => `- ${f.type}: ${f.description}`).join("\n"));
+            }
+            if (entities) {
+                if (entities.urls && entities.urls.length) parts.push("Tautan terkait: " + entities.urls.join(", "));
+                if (entities.bank_accounts && entities.bank_accounts.length) parts.push("Nomor rekening terkait: " + entities.bank_accounts.join(", "));
+                if (entities.phone_numbers && entities.phone_numbers.length) parts.push("Nomor telepon terkait: " + entities.phone_numbers.join(", "));
+            }
+            return parts.join("\n\n");
+        }
+
+        function openReportView() {
+            const report = currentActiveReport;
+            if (!report) return;
+
+            const entities = currentReportSource === 'live'
+                ? { ...currentEntities, chat_text: document.getElementById('input-text').value.trim() }
+                : currentEntities;
+
+            const now = currentReportSource === 'live' ? new Date() : new Date(currentHistoryCreatedAt);
+            const dateStr = now.toLocaleString('id-ID', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+            const area = document.getElementById('print-report-area');
+            area.innerHTML = `
+                <div class="border-b border-slate-200 pb-4 mb-2">
+                    <h1 class="text-lg font-bold">Laporan Hasil Investigasi Digital</h1>
+                    <p class="text-xs text-slate-500 mt-1">Dibuat otomatis oleh Digital Investigation Agent (DIA) &middot; ${escapeHtml(dateStr)}</p>
+                </div>
+
+                <div class="text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-lg p-3 leading-relaxed">
+                    Laporan ini dihasilkan oleh sistem analisis AI dan bersifat sebagai <b>alat bantu awal</b>
+                    untuk mengidentifikasi indikasi penipuan digital. Laporan ini <b>bukan merupakan keputusan hukum</b>
+                    dan tidak menggantikan proses verifikasi resmi oleh pihak berwenang (kepolisian, OJK, atau Kominfo).
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-semibold">Tingkat Risiko</span>
+                        <span class="text-xs font-bold px-2 py-1 rounded-full border ${report.risk_level === 'HIGH' ? 'border-red-400 text-red-700 bg-red-50' : report.risk_level === 'MEDIUM' ? 'border-amber-400 text-amber-700 bg-amber-50' : 'border-emerald-400 text-emerald-700 bg-emerald-50'}">${escapeHtml(report.risk_level)} &middot; ${report.risk_score}/100</span>
+                    </div>
+                    <p class="text-sm text-slate-700 leading-relaxed">${escapeHtml(report.evidence_summary)}</p>
+                </div>
+
+                ${entities.chat_text ? `
+                <div>
+                    <span class="text-sm font-semibold block mb-1">Bukti Percakapan/Pesan</span>
+                    <p class="text-xs text-slate-700 bg-slate-50 border border-slate-200 rounded-lg p-3 whitespace-pre-wrap">${escapeHtml(entities.chat_text)}</p>
+                </div>` : ''}
+
+                <div>
+                    <span class="text-sm font-semibold block mb-1">Entitas yang Diperiksa</span>
+                    <table class="w-full text-xs text-slate-700 border border-slate-200 rounded-lg overflow-hidden">
+                        ${entities.urls && entities.urls.length ? `<tr class="border-b border-slate-200"><td class="p-2 font-medium bg-slate-50 w-1/3">URL / Tautan</td><td class="p-2">${escapeHtml(entities.urls.join(", "))}</td></tr>` : ''}
+                        ${entities.bank_accounts && entities.bank_accounts.length ? `<tr class="border-b border-slate-200"><td class="p-2 font-medium bg-slate-50 w-1/3">No. Rekening</td><td class="p-2">${escapeHtml(entities.bank_accounts.join(", "))}</td></tr>` : ''}
+                        ${entities.phone_numbers && entities.phone_numbers.length ? `<tr class="border-b border-slate-200"><td class="p-2 font-medium bg-slate-50 w-1/3">No. Telepon</td><td class="p-2">${escapeHtml(entities.phone_numbers.join(", "))}</td></tr>` : ''}
+                        ${entities.emails && entities.emails.length ? `<tr><td class="p-2 font-medium bg-slate-50 w-1/3">Email</td><td class="p-2">${escapeHtml(entities.emails.join(", "))}</td></tr>` : ''}
+                        ${!(entities.urls?.length || entities.bank_accounts?.length || entities.phone_numbers?.length || entities.emails?.length) ? `<tr><td class="p-2 text-slate-400 italic">Tidak ada entitas terstruktur yang disertakan.</td></tr>` : ''}
+                    </table>
+                </div>
+
+                <div>
+                    <span class="text-sm font-semibold block mb-1">Indikator Red Flags (${report.red_flags.length})</span>
+                    ${report.red_flags.length === 0
+                        ? '<p class="text-xs text-slate-400 italic">Tidak ditemukan indikator merah.</p>'
+                        : `<ul class="text-xs text-slate-700 space-y-1.5 list-disc pl-4">${report.red_flags.map(f => `<li><b>${escapeHtml(f.type)}</b> (${escapeHtml(f.severity || '-')}): ${escapeHtml(f.description)}</li>`).join('')}</ul>`
+                    }
+                </div>
+
+                <div>
+                    <span class="text-sm font-semibold block mb-1">Penalaran AI</span>
+                    <p class="text-xs text-slate-700 leading-relaxed">${escapeHtml(report.reasoning)}</p>
+                </div>
+
+                <div>
+                    <span class="text-sm font-semibold block mb-1">Rekomendasi Tindak Lanjut</span>
+                    <ul class="text-xs text-slate-700 space-y-1 list-disc pl-4">
+                        ${(report.recommendation || []).map(a => `<li>${escapeHtml(a)}</li>`).join('')}
+                    </ul>
+                </div>
+
+                <div class="text-[10px] text-slate-400 border-t border-slate-200 pt-3">
+                    Confidence: ${escapeHtml(report.confidence || '-')} &middot; Dibuat via Digital Investigation Agent
+                </div>
+            `;
+
+            // Tombol "Lapor ke cekrekening.id" cuma relevan kalau ada rekening
+            // yang dicurigai & risikonya cukup tinggi buat layak dilaporkan.
+            const channelBtn = document.getElementById('res-report-channel-btn');
+            if (channelBtn) {
+                const showChannel = entities.bank_accounts && entities.bank_accounts.length &&
+                    (report.risk_level === 'HIGH' || report.risk_level === 'MEDIUM');
+                channelBtn.classList.toggle('hidden', !showChannel);
+            }
+
+            document.getElementById('report-overlay').classList.remove('hidden');
+        }
+
+        function closeReportView() {
+            document.getElementById('report-overlay').classList.add('hidden');
+        }
+
+        function copyFieldToClipboard(text, btnEl) {
+            navigator.clipboard.writeText(text).then(() => {
+                const original = btnEl.innerHTML;
+                btnEl.innerHTML = '<i class="fa-solid fa-check"></i> Disalin';
+                setTimeout(() => { btnEl.innerHTML = original; }, 1500);
+            }).catch(() => {
+                alert("Gagal menyalin otomatis. Salin manual teks berikut:\n\n" + text);
+            });
+        }
+
+        function openChannelHelper() {
+            const report = currentActiveReport;
+            if (!report) return;
+
+            const entities = currentReportSource === 'live'
+                ? { ...currentEntities, chat_text: document.getElementById('input-text').value.trim() }
+                : currentEntities;
+
+            const account = (entities.bank_accounts && entities.bank_accounts[0]) || "";
+            const category = suggestCategory(report);
+            const kronologi = buildKronologi(report, entities);
+
+            const fields = [
+                { label: "Nomor Rekening", value: account || "(gak ada nomor rekening terdeteksi -- isi manual)" },
+                { label: "Kategori Tindak Pidana (saran)", value: category },
+                { label: "Kronologi", value: kronologi, multiline: true },
+            ];
+
+            const container = document.getElementById('channel-fields');
+            container.innerHTML = fields.map((f, idx) => `
+                <div class="space-y-1">
+                    <div class="flex items-center justify-between">
+                        <label class="text-[11px] font-medium text-slate-600 dark:text-text-muted">${escapeHtml(f.label)}</label>
+                        <button onclick="copyFieldToClipboard(document.getElementById('channel-field-${idx}').value, this)" class="text-[10px] px-2 py-1 bg-light-secondary dark:bg-[#16181C] border border-light-border dark:border-white/10 rounded-full text-slate-700 dark:text-white hover:bg-slate-200 dark:hover:bg-[#22252B] transition-all">
+                            <i class="fa-regular fa-copy"></i> Salin
+                        </button>
+                    </div>
+                    ${f.multiline
+                        ? `<textarea id="channel-field-${idx}" rows="5" class="w-full text-xs bg-light-secondary dark:bg-[#16181C] border border-light-border dark:border-white/10 rounded-lg p-2 text-slate-900 dark:text-white">${escapeHtml(f.value)}</textarea>`
+                        : `<input id="channel-field-${idx}" type="text" value="${escapeHtml(f.value)}" class="w-full text-xs bg-light-secondary dark:bg-[#16181C] border border-light-border dark:border-white/10 rounded-lg p-2 text-slate-900 dark:text-white">`
+                    }
+                </div>
+            `).join("");
+
+            document.getElementById('channel-overlay').classList.remove('hidden');
+        }
+
+        function closeChannelHelper() {
+            document.getElementById('channel-overlay').classList.add('hidden');
         }
     </script>
 </body>

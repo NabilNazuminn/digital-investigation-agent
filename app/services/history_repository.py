@@ -51,9 +51,9 @@ def get_investigation(db: Session, investigation_id: str) -> InvestigationRecord
 
 
 def delete_investigation(db: Session, investigation_id: str) -> bool:
-    """Hapus 1 riwayat investigasi berdasarkan id. Return True kalau berhasil dihapus,
-    False kalau id tidak ditemukan."""
-    record = get_investigation(db, investigation_id)
+    """Hapus 1 riwayat investigasi berdasarkan id. Return True kalau ada yang
+    dihapus, False kalau id-nya gak ketemu."""
+    record = db.query(InvestigationRecord).filter(InvestigationRecord.id == investigation_id).first()
     if record is None:
         return False
     db.delete(record)
@@ -62,19 +62,22 @@ def delete_investigation(db: Session, investigation_id: str) -> bool:
 
 
 def delete_investigations_by_ids(db: Session, ids: list[str]) -> int:
-    """Hapus sejumlah riwayat investigasi berdasarkan daftar id.
-    Return jumlah record yang berhasil dihapus."""
-    deleted = (
+    """Hapus sejumlah riwayat investigasi berdasarkan daftar id. Return jumlah
+    baris yang beneran terhapus (bisa lebih kecil dari len(ids) kalau ada id
+    yang gak ketemu)."""
+    if not ids:
+        return 0
+    deleted_count = (
         db.query(InvestigationRecord)
         .filter(InvestigationRecord.id.in_(ids))
         .delete(synchronize_session=False)
     )
     db.commit()
-    return deleted
+    return deleted_count
 
 
 def delete_all_investigations(db: Session) -> int:
-    """Hapus SEMUA riwayat investigasi. Return jumlah record yang dihapus."""
-    deleted = db.query(InvestigationRecord).delete(synchronize_session=False)
+    """Hapus SEMUA riwayat investigasi. Return jumlah baris yang terhapus."""
+    deleted_count = db.query(InvestigationRecord).delete(synchronize_session=False)
     db.commit()
-    return deleted
+    return deleted_count

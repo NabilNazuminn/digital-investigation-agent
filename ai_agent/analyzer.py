@@ -16,7 +16,13 @@ logger = logging.getLogger(__name__)
 class LLMAnalyzer:
     def __init__(self, config: GeminiConfig | None = None):
         self.config = config or load_config()
-        self.client = genai.Client(api_key=self.config.api_key)
+        # Timeout default httpx/google-genai kadang terlalu pendek buat koneksi
+        # yang kurang stabil, bikin permintaan gampang ke-timeout padahal
+        # cuma butuh nunggu dikit lebih lama. 60 detik biar lebih toleran.
+        self.client = genai.Client(
+            api_key=self.config.api_key,
+            http_options=types.HttpOptions(timeout=60_000),  # dalam milidetik
+        )
 
     def analyze(self, unified_context: UnifiedContext | dict) -> InvestigationReport: # type: ignore
         if isinstance(unified_context, UnifiedContext):
@@ -63,16 +69,45 @@ class LLMAnalyzer:
 
             except Exception as e:
                 error_str = str(e)
-                
-                # Kalau 503 (Server Sibuk) dan masih ada kesempatan coba lagi
-                if "503" in error_str and attempt < max_retries - 1:
+
+                # Kondisi yang layak dicoba ulang:
+                # - Server Gemini lagi sibuk (503) atau kelamaan mroses di
+                #   sisi mereka sendiri (504 DEADLINE_EXCEEDED) -- ini bukan
+                #   masalah di kita, request-nya nyampe, tapi Google-nya yang
+                #   nyerah duluan. Wajar dicoba ulang.
+                # - Masalah jaringan sementara di sisi kita (connection
+                #   timeout/reset) -- request-nya gak sempat nyampe sama
+                #   sekali ke server.
+                is_server_busy = any(marker in error_str for marker in ("503", "504", "DEADLINE_EXCEEDED"))
+                is_network_hiccup = any(
+                    marker in error_str
+                    for marker in (
+                        "10060",  # Windows: connection timed out
+                        "Timeout",
+                        "TimeoutError",
+                        "ConnectError",
+                        "Connection aborted",
+                        "Connection reset",
+                        "Max retries exceeded",
+                    )
+                )
+
+                if (is_server_busy or is_network_hiccup) and attempt < max_retries - 1:
                     wait_time = 5 * (attempt + 1)
+                    reason = "Server Gemini sibuk/lambat (503/504)" if is_server_busy else "Koneksi jaringan bermasalah"
                     logger.warning(
-                        f"Server sibuk (503). Coba lagi dalam {wait_time} detik... "
+                        f"{reason}. Coba lagi dalam {wait_time} detik... "
                         f"({attempt + 1}/{max_retries})"
                     )
                     time.sleep(wait_time)
                 else:
-                    # Kalau bukan 503, atau sudah 3x gagal, berhenti dan raise error
+                    # Kalau bukan kondisi di atas, atau sudah 3x gagal, berhenti dan raise error
                     logger.error(f"Gagal menganalisis: {e}")
+                    if is_network_hiccup:
+                        raise RuntimeError(
+                            "Gagal terhubung ke server Gemini API setelah beberapa kali "
+                            "percobaan. Periksa koneksi internet Anda (termasuk firewall/"
+                            "antivirus yang mungkin memblokir koneksi ke generativelanguage."
+                            f"googleapis.com). Detail teknis: {e}"
+                        ) from e
                     raise RuntimeError(f"LLM analysis gagal: {e}") from e
