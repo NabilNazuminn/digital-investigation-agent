@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -7,12 +8,25 @@ from app.services.ai_agent_client import run_investigation
 from app.services.evidence_aggregator import build_unified_context
 from app.services.external_checker import run_external_checks
 from app.services.file_storage import save_screenshot
-from app.services.history_repository import get_investigation, list_investigations, save_investigation
+from app.services.history_repository import (
+    delete_all_investigations,
+    delete_investigation,
+    delete_investigations_by_ids,
+    get_investigation,
+    list_investigations,
+    save_investigation,
+)
 from app.services.information_extractor import extract_all_entities
 from app.services.ocr_processor import OCRError, extract_text_from_screenshot
 from app.services.validation import ValidationError, validate_request
 
 router = APIRouter()
+
+
+class BatchDeleteRequest(BaseModel):
+    ids: list[str]
+
+
 
 
 @router.post("/investigate")
@@ -96,3 +110,25 @@ def get_history_detail(investigation_id: str, db: Session = Depends(get_db)):
         "screenshot_path": record.screenshot_path,
         "report": record.full_report,
     }
+
+
+@router.delete("/investigations/{investigation_id}")
+def delete_history_item(investigation_id: str, db: Session = Depends(get_db)):
+    """Hapus 1 riwayat investigasi berdasarkan id."""
+    success = delete_investigation(db, investigation_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Investigasi tidak ditemukan.")
+    return {"deleted": 1}
+
+
+@router.delete("/investigations")
+def delete_history_batch(body: BatchDeleteRequest, db: Session = Depends(get_db)):
+    """Hapus sejumlah riwayat investigasi berdasarkan daftar id.
+    Kirim `{ "ids": ["uuid1", "uuid2", ...] }` untuk hapus tertentu,
+    atau `{ "ids": [] }` untuk hapus semua."""
+    if not body.ids:
+        # ids kosong = hapus semua
+        deleted = delete_all_investigations(db)
+    else:
+        deleted = delete_investigations_by_ids(db, body.ids)
+    return {"deleted": deleted}

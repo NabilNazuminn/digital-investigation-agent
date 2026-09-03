@@ -4,6 +4,7 @@ load_dotenv()  # HARUS dipanggil SEBELUM import apapun dari app/,
 # karena beberapa modul (misal ai_agent_client.py) baca env var saat di-import.
 
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.database import init_db
@@ -13,10 +14,30 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Redam warning informational dari SDK google-genai soal "Automatic Function
+# Calling (AFC)" -- ini bukan error, cuma saran gaya pemakaian API dari
+# Google, dan gak ngaruh ke hasil analisis. Diredam biar log server lebih
+# bersih. Kalau mau lihat lagi detail log dari SDK ini, ganti level di bawah
+# jadi logging.WARNING atau logging.INFO.
+logging.getLogger("google_genai").setLevel(logging.ERROR)
+
 app = FastAPI(
     title="Digital Investigation Agent",
     description="AI Agent untuk investigasi awal dugaan penipuan digital",
     version="0.1.0",
+)
+
+# CORS: frontend (index.html) dibuka dari origin/port yang beda dari backend
+# (misal file:// langsung, atau Live Server di port 5500), jadi browser bakal
+# blokir request tanpa header CORS ini. Dibuka lebar (allow_origins=["*"])
+# karena ini masih tahap development/hackathon -- kalau nanti sudah deploy ke
+# domain tetap, sebaiknya dipersempit ke domain frontend aslinya saja.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(investigate_router)

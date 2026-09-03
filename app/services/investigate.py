@@ -1,7 +1,7 @@
-import logging
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+
+import logging
 
 from app.database import get_db
 from app.models.schemas import InvestigationRequest
@@ -14,8 +14,8 @@ from app.services.information_extractor import extract_all_entities
 from app.services.ocr_processor import OCRError, extract_text_from_screenshot
 from app.services.validation import ValidationError, validate_request
 
-logger = logging.getLogger(__name__)
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.post("/investigate")
@@ -60,31 +60,20 @@ def investigate(req: InvestigationRequest, db: Session = Depends(get_db)):
     )
 
     context = build_unified_context(req.chat_text, extracted, verification)
+    report = run_investigation(context)
 
-    try:
-        report = run_investigation(context)
-    except Exception as exc:
-        # AI Agent gagal total (Gemini down/timeout/rate limit/key salah).
-        # Ini SATU-SATUNYA kegagalan yang wajar bikin request gagal -- tanpa
-        # hasil AI Agent, gak ada apa-apa yang bisa dikembalikan ke user.
-        # Tapi errornya dirapikan jadi 503 yang jelas, bukan 500 mentah.
-        logger.error("AI Agent gagal memproses investigasi: %s", exc)
-        raise HTTPException(
-            status_code=503,
-            detail="AI Agent sedang gagal memproses (kemungkinan masalah di Gemini API). Coba lagi sebentar lagi.",
-        ) from exc
-
+    # Hasil analisis AI ini sudah "jadi" -- jangan sampai gagal simpan ke
+    # riwayat (misal koneksi DB Neon sempat putus) bikin hasil yang sudah
+    # sukses ini ikut ke-buang jadi error 500 ke frontend. Simpan ke DB tetap
+    # dicoba, tapi kalau gagal, tetap return laporan aslinya ke user --
+    # cuma dikasih tanda kalau riwayatnya gak sempat kesimpan.
     try:
         save_investigation(db, req.chat_text, screenshot_path, report)
-    except Exception as exc:
-        # Database gagal simpan (misal Neon lagi down) TIDAK BOLEH bikin user
-        # kehilangan hasil analisis yang udah berhasil didapat dari AI Agent --
-        # tetap kembalikan hasilnya, cuma kasih tau riwayatnya gak kesimpen.
-        logger.error("Gagal simpan riwayat ke database: %s", exc)
+    except Exception as exc:  # noqa: BLE001 -- sengaja luas, ini fallback terakhir biar hasil AI gak hilang
+        logger.error("Gagal simpan riwayat investigasi ke database: %s", exc)
+        db.rollback()
         report["history_saved"] = False
-        report["history_warning"] = "Hasil analisis berhasil, tapi gagal disimpan ke riwayat."
-    else:
-        report["history_saved"] = True
+        report["history_warning"] = "Hasil analisis berhasil, tapi gagal disimpan ke riwayat (masalah koneksi database)."
 
     if ocr_warning:
         report["ocr_warning"] = ocr_warning  # info transparansi ke frontend, bukan error fatal

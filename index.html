@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Investigation Agent — BISA AI Challenge 2026</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        neutral: '#08080A',
+                        background: '#131315',
+                        surface: '#0D0E11',
+                        secondary: '#16181C',
+                        tertiary: '#22252B',
+                        'text-muted': '#A1A5AB',
+                        'border-subtle': 'rgba(255, 255, 255, 0.1)',
+                        'light-bg': '#F4F4F6',
+                        'light-surface': '#FFFFFF',
+                        'light-secondary': '#EAEAEE',
+                        'light-border': 'rgba(0, 0, 0, 0.1)',
+                        'light-text-muted': '#6B7280',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s ease, color 0.3s ease; }
+        .code-font { font-family: 'JetBrains Mono', monospace; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        .dark ::-webkit-scrollbar-thumb { background: #22252B; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 9999px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between bg-light-bg dark:bg-[#08080A] text-slate-900 dark:text-white selection:bg-black selection:text-white dark:selection:bg-white dark:selection:text-black">
+
+    <header class="sticky top-4 z-50 max-w-7xl mx-auto px-4 w-full">
+        <div class="bg-white/80 dark:bg-[#16181C]/80 backdrop-blur-md border border-light-border dark:border-white/10 rounded-full px-6 h-14 flex items-center justify-between shadow-sm dark:shadow-none transition-all">
+            <div class="flex items-center space-x-3">
+                <div class="w-7 h-7 rounded-full bg-black dark:bg-white flex items-center justify-center text-white dark:text-black transition-colors">
+                    <i class="fa-solid fa-shield-halved text-xs"></i>
+                </div>
+                <span class="font-medium text-sm tracking-tight text-slate-900 dark:text-white">Digital Investigation Agent</span>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <div class="hidden sm:flex items-center space-x-3 text-[11px] code-font text-light-text-muted dark:text-text-muted">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-light-secondary dark:bg-[#0D0E11] border border-light-border dark:border-white/10">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        FastAPI / Gemini
+                    </span>
+                </div>
+
+                <button onclick="toggleTheme()" id="theme-toggle-btn" class="flex items-center justify-center w-9 h-9 rounded-full bg-light-secondary dark:bg-[#0D0E11] border border-light-border dark:border-white/10 text-slate-700 dark:text-white hover:opacity-80 transition-all" title="Ubah Mode Tampilan">
+                    <i id="theme-icon" class="fa-solid fa-moon text-xs"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow w-full">
+
+        <div class="flex space-x-2 border-b border-light-border dark:border-white/10 mb-8 pb-3">
+            <button onclick="switchTab('investigate')" id="tab-investigate" class="tab-btn px-4 py-2 text-xs font-medium rounded-full bg-black dark:bg-white text-white dark:text-black transition-all">
+                Investigasi Kasus
+            </button>
+            <button onclick="switchTab('presets')" id="tab-presets" class="tab-btn px-4 py-2 text-xs font-medium rounded-full text-light-text-muted dark:text-text-muted hover:text-slate-900 dark:hover:text-white transition-all">
+                Contoh Presets
+            </button>
+            <button onclick="switchTab('riwayat')" id="tab-riwayat" class="tab-btn px-4 py-2 text-xs font-medium rounded-full text-light-text-muted dark:text-text-muted hover:text-slate-900 dark:hover:text-white transition-all">
+                Riwayat
+            </button>
+        </div>
+
+        <div id="view-investigate" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+            <div class="lg:col-span-5 space-y-6">
+                <div class="bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 rounded-2xl p-6 shadow-sm dark:shadow-none transition-all">
+                    <h2 class="text-base font-medium text-slate-900 dark:text-white mb-1">Input Bukti</h2>
+                    <p class="text-xs text-light-text-muted dark:text-text-muted mb-6">Unggah bukti gambar atau masukkan parameter yang dicurigai.</p>
+
+                    <form id="investigation-form" onsubmit="handleInvestigate(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-[11px] code-font text-light-text-muted dark:text-text-muted uppercase tracking-wider mb-2">Bukti Gambar (OCR)</label>
+                            <div id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleFileDrop(event)" class="border border-dashed border-slate-300 dark:border-white/15 bg-light-secondary dark:bg-[#16181C] hover:border-slate-400 dark:hover:border-white/30 rounded-xl p-4 text-center cursor-pointer transition-all">
+                                <input type="file" id="file-input" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
+                                <div id="upload-placeholder" class="space-y-1">
+                                    <i class="fa-solid fa-arrow-up-from-bracket text-light-text-muted dark:text-text-muted text-sm mb-1"></i>
+                                    <p class="text-xs text-slate-700 dark:text-slate-200">Klik / unggah berkas</p>
+                                </div>
+                                <div id="file-preview" class="hidden flex items-center justify-between bg-light-surface dark:bg-[#0D0E11] p-2 rounded-lg border border-light-border dark:border-white/10">
+                                    <div class="flex items-center space-x-3 overflow-hidden">
+                                        <img id="preview-img" src="" alt="Preview" class="w-8 h-8 rounded object-cover">
+                                        <p id="preview-name" class="text-xs font-medium text-slate-900 dark:text-white truncate"></p>
+                                    </div>
+                                    <button type="button" onclick="removeFile(event)" class="text-light-text-muted dark:text-text-muted hover:text-slate-900 dark:hover:text-white p-1">
+                                        <i class="fa-solid fa-xmark text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] code-font text-light-text-muted dark:text-text-muted uppercase tracking-wider mb-2">Teks Percakapan</label>
+                            <textarea id="input-text" rows="3" class="w-full bg-light-secondary dark:bg-[#16181C] border border-light-border dark:border-white/10 rounded-xl p-3 text-xs text-slate-900 dark:text-white placeholder-light-text-muted dark:placeholder-text-muted focus:outline-none focus:border-slate-400 dark:focus:border-white/30 transition-all" placeholder="Masukkan narasi pesan/chat..."></textarea>
+                        </div>
+
+                        <div class="space-y-3 pt-2">
+                            <input type="text" id="input-url" class="w-full bg-light-secondary dark:bg-[#16181C] border border-light-border dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-light-text-muted dark:placeholder-text-muted focus:outline-none focus:border-slate-400 dark:focus:border-white/30 transition-all" placeholder="URL Target">
+                            <input type="text" id="input-account" class="w-full bg-light-secondary dark:bg-[#16181C] border border-light-border dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-light-text-muted dark:placeholder-text-muted focus:outline-none focus:border-slate-400 dark:focus:border-white/30 transition-all" placeholder="No. Rekening">
+                            <input type="text" id="input-phone" class="w-full bg-light-secondary dark:bg-[#16181C] border border-light-border dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-light-text-muted dark:placeholder-text-muted focus:outline-none focus:border-slate-400 dark:focus:border-white/30 transition-all" placeholder="No. Telepon / WA">
+                            <input type="text" id="input-email" class="w-full bg-light-secondary dark:bg-[#16181C] border border-light-border dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-light-text-muted dark:placeholder-text-muted focus:outline-none focus:border-slate-400 dark:focus:border-white/30 transition-all" placeholder="Alamat Email">
+                        </div>
+
+                        <div class="pt-4 flex items-center space-x-2">
+                            <button type="submit" id="btn-submit" class="flex-1 bg-black hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-black font-medium py-2.5 px-4 rounded-full text-xs transition-all">
+                                Jalankan Analisis AI
+                            </button>
+                            <button type="button" onclick="resetForm()" class="bg-light-secondary hover:bg-slate-200 dark:bg-[#16181C] dark:hover:bg-[#22252B] border border-light-border dark:border-white/10 text-slate-900 dark:text-white font-medium py-2.5 px-3 rounded-full text-xs transition-all">
+                                Reset
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="lg:col-span-7 space-y-6">
+
+                <div id="state-idle" class="bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 rounded-2xl p-12 text-center flex flex-col items-center justify-center min-h-[440px] shadow-sm dark:shadow-none transition-all">
+                    <div class="w-12 h-12 rounded-full bg-light-secondary dark:bg-[#16181C] border border-light-border dark:border-white/10 flex items-center justify-center mb-3 text-light-text-muted dark:text-text-muted">
+                        <i class="fa-solid fa-terminal text-sm"></i>
+                    </div>
+                    <p class="text-xs text-light-text-muted dark:text-text-muted">Masukkan parameter di sebelah kiri atau gunakan pilihan <strong>Presets</strong>.</p>
+                </div>
+
+                <div id="state-loading" class="hidden bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 rounded-2xl p-6 space-y-6 shadow-sm dark:shadow-none transition-all">
+                    <div class="flex items-center justify-between border-b border-light-border dark:border-white/10 pb-4">
+                        <div class="flex items-center space-x-3">
+                            <i class="fa-solid fa-circle-notch animate-spin text-slate-900 dark:text-white text-xs"></i>
+                            <span class="text-xs font-medium text-slate-900 dark:text-white">Memproses Pipeline Backend</span>
+                        </div>
+                        <span id="loading-timer" class="code-font text-xs text-light-text-muted dark:text-text-muted">0.0s</span>
+                    </div>
+
+                    <div class="space-y-3 text-xs">
+                        <div id="step-1" class="p-3 rounded-xl bg-light-secondary dark:bg-[#16181C] border border-light-border dark:border-white/5 flex items-center justify-between">
+                            <span class="text-light-text-muted dark:text-text-muted">1. Ingestion & Data Extraction</span>
+                            <span class="step-status code-font text-light-text-muted dark:text-text-muted">Pending</span>
+                        </div>
+                        <div id="step-2" class="p-3 rounded-xl bg-light-secondary dark:bg-[#16181C] border border-light-border dark:border-white/5 flex items-center justify-between">
+                            <span class="text-light-text-muted dark:text-text-muted">2. Verification & Reputation Checks</span>
+                            <span class="step-status code-font text-light-text-muted dark:text-text-muted">Pending</span>
+                        </div>
+                        <div id="step-3" class="p-3 rounded-xl bg-light-secondary dark:bg-[#16181C] border border-light-border dark:border-white/5 flex items-center justify-between">
+                            <span class="text-light-text-muted dark:text-text-muted">3. LLM Reasoning (Gemini)</span>
+                            <span class="step-status code-font text-light-text-muted dark:text-text-muted">Pending</span>
+                        </div>
+                        <div id="step-4" class="p-3 rounded-xl bg-light-secondary dark:bg-[#16181C] border border-light-border dark:border-white/5 flex items-center justify-between">
+                            <span class="text-light-text-muted dark:text-text-muted">4. Risk Scoring & Output Generation</span>
+                            <span class="step-status code-font text-light-text-muted dark:text-text-muted">Pending</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="state-result" class="hidden space-y-6">
+
+                    <div id="risk-card" class="bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 rounded-2xl p-6 relative shadow-sm dark:shadow-none transition-all">
+                        <div class="flex items-center justify-between mb-4">
+                            <span id="res-badge" class="px-3 py-1 rounded-full text-[10px] font-medium code-font border border-slate-300 dark:border-white/20">HIGH RISK</span>
+                            <span class="text-[11px] code-font text-light-text-muted dark:text-text-muted">Score: <span id="res-score" class="text-slate-900 dark:text-white font-bold">0</span>/100</span>
+                        </div>
+                        <h2 id="res-title" class="text-base font-medium text-slate-900 dark:text-white mb-2">Title</h2>
+                        <p id="res-summary" class="text-xs text-light-text-muted dark:text-text-muted leading-relaxed"></p>
+                    </div>
+
+                    <div class="bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 rounded-2xl p-6 space-y-3 shadow-sm dark:shadow-none transition-all">
+                        <div class="flex items-center justify-between border-b border-light-border dark:border-white/10 pb-3">
+                            <span class="text-xs font-medium text-slate-900 dark:text-white">Indikator Merah (Red Flags)</span>
+                            <span id="res-flag-count" class="text-[10px] code-font text-light-text-muted dark:text-text-muted">0 Flags</span>
+                        </div>
+                        <div id="res-red-flags" class="space-y-2"></div>
+                    </div>
+
+                    <div class="bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 rounded-2xl p-6 space-y-3 shadow-sm dark:shadow-none transition-all">
+                        <span class="text-xs font-medium text-slate-900 dark:text-white block border-b border-light-border dark:border-white/10 pb-3">Tingkat Keyakinan AI</span>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs" id="res-verification-grid"></div>
+                    </div>
+                    <div id="res-ocr-warning" class="hidden bg-amber-50 dark:bg-amber-500/10 border border-amber-300 dark:border-amber-500/30 rounded-2xl p-4 text-xs text-amber-800 dark:text-amber-300"></div>
+                    <div id="res-history-warning" class="hidden bg-amber-50 dark:bg-amber-500/10 border border-amber-300 dark:border-amber-500/30 rounded-2xl p-4 text-xs text-amber-800 dark:text-amber-300"></div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 rounded-2xl p-5 space-y-2 shadow-sm dark:shadow-none transition-all">
+                            <span class="text-[11px] code-font text-light-text-muted dark:text-text-muted uppercase block">Penalaran AI</span>
+                            <p id="res-reasoning" class="text-xs text-light-text-muted dark:text-text-muted leading-relaxed"></p>
+                        </div>
+                        <div class="bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 rounded-2xl p-5 space-y-2 shadow-sm dark:shadow-none transition-all">
+                            <span class="text-[11px] code-font text-light-text-muted dark:text-text-muted uppercase block">Rekomendasi</span>
+                            <ul id="res-actions" class="space-y-1.5 text-xs text-light-text-muted dark:text-text-muted"></ul>
+                        </div>
+                    </div>
+
+                    <div class="bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 rounded-2xl p-4 flex items-center justify-between shadow-sm dark:shadow-none transition-all">
+                        <button onclick="downloadReport()" class="px-4 py-2 bg-light-secondary hover:bg-slate-200 dark:bg-[#16181C] dark:hover:bg-[#22252B] border border-light-border dark:border-white/10 text-xs rounded-full text-slate-900 dark:text-white transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-download text-xs"></i> Download Laporan (JSON)
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div id="view-presets" class="hidden space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 hover:border-slate-400 dark:hover:border-white/30 rounded-2xl p-5 space-y-3 cursor-pointer shadow-sm dark:shadow-none transition-all" onclick="loadPreset(1)">
+                    <span class="px-2.5 py-0.5 rounded-full border border-light-border dark:border-white/10 text-[10px] code-font text-light-text-muted dark:text-text-muted">PRESET 1</span>
+                    <h3 class="text-sm font-medium text-slate-900 dark:text-white">Lowongan Kerja Fake BUMN</h3>
+                    <p class="text-xs text-light-text-muted dark:text-text-muted">Permintaan transfer dana medis rekrutmen.</p>
+                </div>
+                <div class="bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 hover:border-slate-400 dark:hover:border-white/30 rounded-2xl p-5 space-y-3 cursor-pointer shadow-sm dark:shadow-none transition-all" onclick="loadPreset(2)">
+                    <span class="px-2.5 py-0.5 rounded-full border border-light-border dark:border-white/10 text-[10px] code-font text-light-text-muted dark:text-text-muted">PRESET 2</span>
+                    <h3 class="text-sm font-medium text-slate-900 dark:text-white">Phishing APK Bank</h3>
+                    <p class="text-xs text-light-text-muted dark:text-text-muted">Pesan tautan unduh APK berpotensi trojan.</p>
+                </div>
+                <div class="bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 hover:border-slate-400 dark:hover:border-white/30 rounded-2xl p-5 space-y-3 cursor-pointer shadow-sm dark:shadow-none transition-all" onclick="loadPreset(3)">
+                    <span class="px-2.5 py-0.5 rounded-full border border-light-border dark:border-white/10 text-[10px] code-font text-light-text-muted dark:text-text-muted">PRESET 3</span>
+                    <h3 class="text-sm font-medium text-slate-900 dark:text-white">Transaksi E-Commerce Resmi</h3>
+                    <p class="text-xs text-light-text-muted dark:text-text-muted">Konfirmasi transaksi valid tanpa indikasi penipuan.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-riwayat" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="lg:col-span-5 space-y-3">
+                <div class="flex items-center justify-between gap-2">
+                    <h2 class="text-sm font-medium text-slate-900 dark:text-white flex-1">Riwayat Investigasi</h2>
+                    <div class="flex items-center gap-1.5">
+                        <button id="btn-delete-selected" onclick="deleteSelected()" title="Hapus Terpilih" class="hidden px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-600 dark:text-red-400 text-[11px] rounded-full transition-all flex items-center gap-1">
+                            <i class="fa-solid fa-trash-can text-[10px]"></i> Hapus (<span id="selected-count">0</span>)
+                        </button>
+                        <button onclick="deleteAllHistory()" title="Hapus Semua Riwayat" class="px-2.5 py-1.5 bg-light-secondary hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-600 dark:hover:text-red-400 border border-light-border dark:border-white/10 text-[11px] rounded-full text-slate-700 dark:text-text-muted transition-all flex items-center gap-1">
+                            <i class="fa-solid fa-trash text-[10px]"></i> Hapus Semua
+                        </button>
+                        <button onclick="loadHistory()" title="Refresh" class="px-2.5 py-1.5 bg-light-secondary hover:bg-slate-200 dark:bg-[#16181C] dark:hover:bg-[#22252B] border border-light-border dark:border-white/10 text-[11px] rounded-full text-slate-900 dark:text-white transition-all">
+                            <i class="fa-solid fa-rotate-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="history-status" class="text-xs text-light-text-muted dark:text-text-muted"></div>
+                <div id="history-list" class="space-y-2"></div>
+            </div>
+            <div class="lg:col-span-7">
+                <div id="history-detail" class="bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 rounded-2xl p-12 text-center flex flex-col items-center justify-center min-h-[440px] shadow-sm dark:shadow-none transition-all">
+                    <div class="w-12 h-12 rounded-full bg-light-secondary dark:bg-[#16181C] border border-light-border dark:border-white/10 flex items-center justify-center mb-3 text-light-text-muted dark:text-text-muted">
+                        <i class="fa-solid fa-clock-rotate-left text-sm"></i>
+                    </div>
+                    <p class="text-xs text-light-text-muted dark:text-text-muted">Pilih salah satu kasus di daftar riwayat untuk lihat detail laporan.</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="border-t border-light-border dark:border-white/10 py-6 text-center text-xs text-light-text-muted dark:text-text-muted">
+        <p>© 2026 Digital Investigation Agent</p>
+    </footer>
+
+    <script>
+        const API_BASE_URL = "http://127.0.0.1:8000";
+
+        const PRESETS = {
+            1: {
+                text: "Selamat! Anda dinyatakan LULUS Seleksi Administrasi Rekrutmen Bersama BUMN 2026. Untuk memproses kartu ujian dan seragam kerja, mohon segera melakukan pembayaran biaya verifikasi medis sebesar Rp 750.000 ke rekening bendahara panitia. Tautan: bit.ly/rekrutmen-bumn-2026",
+                url: "bit.ly/rekrutmen-bumn-2026",
+                account: "8830192831",
+                phone: "+6281299881122",
+                email: "panitia-bumn-fake@gmail.com"
+            },
+            2: {
+                text: "Pemberitahuan Resmi Bank BCA: Penyesuaian tarif transaksi. Batalkan melalui konfirmasi formulir digital resmi di aplikasi berikut: http://update-tarif-bank.cc/Surat_Pemberitahuan.apk",
+                url: "http://update-tarif-bank.cc",
+                account: "",
+                phone: "+6281355443322",
+                email: "info-bca-update@gmail.com"
+            },
+            3: {
+                text: "Konfirmasi pembayaran pesanan Tokopedia via Virtual Account Mandiri telah diterima. Pesanan sedang diproses.",
+                url: "https://tokopedia.com/invoice/1293",
+                account: "880129381923",
+                phone: "+628111928301",
+                email: "no-reply@tokopedia.com"
+            }
+        };
+
+        let currentActiveReport = null;
+        let currentScreenshotBase64 = null;
+        let selectedHistoryIds = new Set();
+        let activeHistoryDetailId = null;
+
+        window.addEventListener('dragover', (e) => e.preventDefault());
+        window.addEventListener('drop', (e) => e.preventDefault());
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.className = "fa-solid fa-sun text-xs";
+                try { localStorage.setItem('theme', 'light'); } catch (e) {}
+            } else {
+                html.classList.add('dark');
+                icon.className = "fa-solid fa-moon text-xs";
+                try { localStorage.setItem('theme', 'dark'); } catch (e) {}
+            }
+        }
+
+        (function initTheme() {
+            let savedTheme = null;
+            try { savedTheme = localStorage.getItem('theme'); } catch (e) {}
+            const icon = document.getElementById('theme-icon');
+            if (savedTheme === 'light') {
+                document.documentElement.classList.remove('dark');
+                if (icon) icon.className = "fa-solid fa-sun text-xs";
+            } else {
+                document.documentElement.classList.add('dark');
+                if (icon) icon.className = "fa-solid fa-moon text-xs";
+            }
+        })();
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-black', 'text-white', 'dark:bg-white', 'dark:text-black');
+                btn.classList.add('text-light-text-muted', 'dark:text-text-muted');
+            });
+
+            const activeBtn = document.getElementById('tab-' + tabId);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-black', 'text-white', 'dark:bg-white', 'dark:text-black');
+                activeBtn.classList.remove('text-light-text-muted', 'dark:text-text-muted');
+            }
+
+            ['investigate', 'presets', 'riwayat'].forEach(id => {
+                const el = document.getElementById('view-' + id);
+                if (el) el.classList.add('hidden');
+            });
+
+            const viewEl = document.getElementById('view-' + tabId);
+            if (viewEl) viewEl.classList.remove('hidden');
+
+            if (tabId === 'riwayat') {
+                loadHistory();
+            }
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) processSelectedFile(file);
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            document.getElementById('drop-zone').classList.add('border-slate-400', 'dark:border-white/40');
+        }
+
+        function handleDragLeave(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            document.getElementById('drop-zone').classList.remove('border-slate-400', 'dark:border-white/40');
+        }
+
+        function handleFileDrop(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            document.getElementById('drop-zone').classList.remove('border-slate-400', 'dark:border-white/40');
+            const file = event.dataTransfer.files[0];
+            if (file) processSelectedFile(file);
+        }
+
+        function processSelectedFile(file) {
+            const allowedTypes = ["image/png", "image/jpeg", "image/jpg"];
+            if (!allowedTypes.includes(file.type)) {
+                alert("Format gambar tidak didukung. Gunakan PNG, JPG, atau JPEG.");
+                document.getElementById('file-input').value = "";
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                alert("Ukuran gambar melebihi batas 5 MB.");
+                document.getElementById('file-input').value = "";
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentScreenshotBase64 = e.target.result;
+                document.getElementById('preview-img').src = e.target.result;
+                document.getElementById('preview-name').innerText = file.name;
+                document.getElementById('upload-placeholder').classList.add('hidden');
+                document.getElementById('file-preview').classList.remove('hidden');
+            }
+            reader.readAsDataURL(file);
+        }
+
+        function removeFile(e) {
+            if (e && e.stopPropagation) e.stopPropagation();
+            document.getElementById('file-input').value = "";
+            currentScreenshotBase64 = null;
+            document.getElementById('upload-placeholder').classList.remove('hidden');
+            document.getElementById('file-preview').classList.add('hidden');
+        }
+
+        function loadPreset(id) {
+            const data = PRESETS[id];
+            document.getElementById('input-text').value = data.text;
+            document.getElementById('input-url').value = data.url;
+            document.getElementById('input-account').value = data.account;
+            document.getElementById('input-phone').value = data.phone;
+            document.getElementById('input-email').value = data.email;
+
+            switchTab('investigate');
+            handleInvestigate(new Event('submit'));
+        }
+
+        function toList(value) {
+            return value && value.trim() ? [value.trim()] : [];
+        }
+
+        function buildPayload() {
+            const chatText = document.getElementById('input-text').value.trim();
+            return {
+                chat_text: chatText || null,
+                screenshot_base64: currentScreenshotBase64 || null,
+                urls: toList(document.getElementById('input-url').value),
+                phone_numbers: toList(document.getElementById('input-phone').value),
+                bank_accounts: toList(document.getElementById('input-account').value),
+                emails: toList(document.getElementById('input-email').value)
+            };
+        }
+
+        function handleInvestigate(event) {
+            if (event && event.preventDefault) event.preventDefault();
+            const payload = buildPayload();
+
+            const hasEvidence = payload.chat_text || payload.screenshot_base64 ||
+                payload.urls.length || payload.phone_numbers.length ||
+                payload.bank_accounts.length || payload.emails.length;
+
+            if (!hasEvidence) {
+                alert("Masukkan minimal satu bukti.");
+                return;
+            }
+
+            runInvestigationPipeline(payload);
+        }
+
+        async function runInvestigationPipeline(payload) {
+            document.getElementById('state-idle').classList.add('hidden');
+            document.getElementById('state-result').classList.add('hidden');
+            document.getElementById('state-loading').classList.remove('hidden');
+            document.getElementById('btn-submit').disabled = true;
+
+            let timer = 0.0;
+            const timerInterval = setInterval(() => {
+                timer += 0.1;
+                document.getElementById('loading-timer').innerText = timer.toFixed(1) + "s";
+            }, 100);
+
+            setTimeout(() => { setStepActive(1); }, 150);
+            setTimeout(() => { setStepComplete(1); setStepActive(2); }, 500);
+            setTimeout(() => { setStepComplete(2); setStepActive(3); }, 900);
+            setStepActive(4);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/investigate`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || `Request gagal (status ${response.status}).`);
+                }
+
+                setStepComplete(1); setStepComplete(2); setStepComplete(3); setStepComplete(4);
+                clearInterval(timerInterval);
+                document.getElementById('state-loading').classList.add('hidden');
+                document.getElementById('state-result').classList.remove('hidden');
+                renderReport(data);
+            } catch (err) {
+                clearInterval(timerInterval);
+                document.getElementById('state-loading').classList.add('hidden');
+                document.getElementById('state-idle').classList.remove('hidden');
+
+                const isNetworkError = err instanceof TypeError;
+                alert(
+                    isNetworkError
+                        ? `Gagal menghubungi backend di ${API_BASE_URL}. Pastikan server FastAPI-nya jalan (uvicorn app.main:app) dan bisa diakses dari browser ini.`
+                        : `Investigasi gagal: ${err.message}`
+                );
+            } finally {
+                document.getElementById('btn-submit').disabled = false;
+            }
+        }
+
+        function setStepActive(stepNum) {
+            const stepEl = document.getElementById('step-' + stepNum);
+            stepEl.querySelector('.step-status').innerText = "Processing...";
+            stepEl.querySelector('.step-status').className = "step-status code-font text-slate-900 dark:text-white";
+        }
+
+        function setStepComplete(stepNum) {
+            const stepEl = document.getElementById('step-' + stepNum);
+            stepEl.querySelector('.step-status').innerText = "Done";
+            stepEl.querySelector('.step-status').className = "step-status code-font text-light-text-muted dark:text-text-muted";
+        }
+
+        function badgeClasses(level) {
+            if (level === "HIGH") return "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30";
+            if (level === "MEDIUM") return "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30";
+            return "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30";
+        }
+
+        function renderReport(report) {
+            currentActiveReport = report;
+
+            document.getElementById('res-score').innerText = report.risk_score;
+            const badgeEl = document.getElementById('res-badge');
+            badgeEl.innerText = report.risk_level + " RISK";
+            badgeEl.className = "px-3 py-1 rounded-full text-[10px] font-medium code-font border " + badgeClasses(report.risk_level);
+            document.getElementById('res-title').innerText =
+                report.risk_level === "HIGH" ? "Indikasi Kuat Aktivitas Mencurigakan" :
+                report.risk_level === "MEDIUM" ? "Indikasi Aktivitas Perlu Diwaspadai" :
+                "Tidak Ditemukan Indikasi Signifikan";
+            document.getElementById('res-summary').innerText = report.evidence_summary;
+            document.getElementById('res-flag-count').innerText = report.red_flags.length + " Flags";
+
+            const flagsContainer = document.getElementById('res-red-flags');
+            flagsContainer.innerHTML = "";
+            if (report.red_flags.length === 0) {
+                flagsContainer.innerHTML = '<p class="text-xs text-light-text-muted dark:text-text-muted">Tidak ada indikator merah terdeteksi.</p>';
+            } else {
+                report.red_flags.forEach(flag => {
+                    flagsContainer.innerHTML += `
+                        <div class="p-3 rounded-xl bg-light-secondary dark:bg-[#16181C] border border-light-border dark:border-white/5 space-y-1">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-xs font-medium text-slate-900 dark:text-white">${escapeHtml(flag.type)}</h4>
+                                <span class="text-[10px] code-font text-light-text-muted dark:text-text-muted uppercase">${escapeHtml(flag.severity || "")}</span>
+                            </div>
+                            <p class="text-[11px] text-light-text-muted dark:text-text-muted">${escapeHtml(flag.description)}</p>
+                        </div>
+                    `;
+                });
+            }
+
+            const verifContainer = document.getElementById('res-verification-grid');
+            verifContainer.innerHTML = `
+                <div class="bg-light-secondary dark:bg-[#16181C] p-3 rounded-xl border border-light-border dark:border-white/5 flex items-center justify-between">
+                    <span class="text-light-text-muted dark:text-text-muted">Confidence</span>
+                    <span class="code-font text-[10px] text-slate-900 dark:text-white uppercase">${escapeHtml(report.confidence || "-")}</span>
+                </div>
+            `;
+            if (report.missing_evidence && report.missing_evidence.length) {
+                verifContainer.innerHTML += `
+                    <div class="bg-light-secondary dark:bg-[#16181C] p-3 rounded-xl border border-light-border dark:border-white/5">
+                        <span class="text-light-text-muted dark:text-text-muted block mb-1">Bukti yang Kurang</span>
+                        <span class="code-font text-[10px] text-slate-900 dark:text-white">${escapeHtml(report.missing_evidence.join(", "))}</span>
+                    </div>
+                `;
+            }
+
+            const ocrWarnEl = document.getElementById('res-ocr-warning');
+            if (report.ocr_warning) {
+                ocrWarnEl.classList.remove('hidden');
+                ocrWarnEl.innerText = "⚠ OCR: " + report.ocr_warning;
+            } else {
+                ocrWarnEl.classList.add('hidden');
+            }
+
+            const historyWarnEl = document.getElementById('res-history-warning');
+            if (report.history_saved === false) {
+                historyWarnEl.classList.remove('hidden');
+                historyWarnEl.innerText = "⚠ " + (report.history_warning || "Hasil ini gagal disimpan ke riwayat.");
+            } else {
+                historyWarnEl.classList.add('hidden');
+            }
+
+            document.getElementById('res-reasoning').innerText = report.reasoning;
+
+            const actionsContainer = document.getElementById('res-actions');
+            actionsContainer.innerHTML = "";
+            (report.recommendation || []).forEach(action => {
+                actionsContainer.innerHTML += `<li>• ${escapeHtml(action)}</li>`;
+            });
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.innerText = str == null ? "" : String(str);
+            return div.innerHTML;
+        }
+
+        function resetForm() {
+            document.getElementById('investigation-form').reset();
+            currentScreenshotBase64 = null;
+            removeFile(new Event('click'));
+            document.getElementById('state-result').classList.add('hidden');
+            document.getElementById('state-loading').classList.add('hidden');
+            document.getElementById('state-idle').classList.remove('hidden');
+        }
+
+        function downloadReport() {
+            if (!currentActiveReport) return;
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentActiveReport, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "Report_" + Date.now() + ".json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function formatDate(isoString) {
+            try {
+                return new Date(isoString).toLocaleString('id-ID', {
+                    day: '2-digit', month: 'short', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                });
+            } catch (e) {
+                return isoString;
+            }
+        }
+
+        async function loadHistory() {
+            const statusEl = document.getElementById('history-status');
+            const listEl = document.getElementById('history-list');
+            statusEl.innerText = "Memuat riwayat...";
+            listEl.innerHTML = "";
+            selectedHistoryIds.clear();
+            updateSelectedUI();
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/investigations`);
+                if (!response.ok) throw new Error(`Status ${response.status}`);
+                const records = await response.json();
+
+                if (!records.length) {
+                    statusEl.innerText = "Belum ada riwayat investigasi.";
+                    resetHistoryDetail();
+                    return;
+                }
+                statusEl.innerText = `${records.length} investigasi ditemukan.`;
+
+                records.forEach(r => {
+                    const item = document.createElement('div');
+                    item.className = "group relative bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 hover:border-slate-400 dark:hover:border-white/30 rounded-xl p-3.5 cursor-pointer transition-all space-y-1.5 flex items-start gap-3";
+                    item.innerHTML = `
+                        <input type="checkbox" data-id="${r.id}" onclick="toggleSelectHistory(event, '${r.id}')" class="mt-1 rounded border-slate-300 text-black focus:ring-0 cursor-pointer">
+                        <div class="flex-1 min-w-0" onclick="showHistoryDetail('${r.id}')">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-medium code-font border ${badgeClasses(r.risk_level)}">${escapeHtml(r.risk_level)} · ${r.risk_score}</span>
+                                <span class="text-[10px] text-light-text-muted dark:text-text-muted">${formatDate(r.created_at)}</span>
+                            </div>
+                            <p class="text-xs text-slate-700 dark:text-slate-200 truncate mt-1">${escapeHtml(r.chat_text_snippet || "(tanpa teks chat)")}</p>
+                        </div>
+                        <button onclick="deleteSingleHistory(event, '${r.id}')" title="Hapus item ini" class="opacity-0 group-hover:opacity-100 p-1 text-light-text-muted dark:text-text-muted hover:text-red-500 dark:hover:text-red-400 transition-all">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                    `;
+                    listEl.appendChild(item);
+                });
+            } catch (err) {
+                statusEl.innerText = `Gagal memuat riwayat dari ${API_BASE_URL}. Pastikan backend jalan.`;
+            }
+        }
+
+        function toggleSelectHistory(e, id) {
+            e.stopPropagation();
+            if (e.target.checked) {
+                selectedHistoryIds.add(id);
+            } else {
+                selectedHistoryIds.delete(id);
+            }
+            updateSelectedUI();
+        }
+
+        function updateSelectedUI() {
+            const btn = document.getElementById('btn-delete-selected');
+            const countEl = document.getElementById('selected-count');
+            if (selectedHistoryIds.size > 0) {
+                btn.classList.remove('hidden');
+                countEl.innerText = selectedHistoryIds.size;
+            } else {
+                btn.classList.add('hidden');
+            }
+        }
+
+        function resetHistoryDetail() {
+            activeHistoryDetailId = null;
+            document.getElementById('history-detail').innerHTML = `
+                <div class="w-12 h-12 rounded-full bg-light-secondary dark:bg-[#16181C] border border-light-border dark:border-white/10 flex items-center justify-center mb-3 text-light-text-muted dark:text-text-muted">
+                    <i class="fa-solid fa-clock-rotate-left text-sm"></i>
+                </div>
+                <p class="text-xs text-light-text-muted dark:text-text-muted">Pilih salah satu kasus di daftar riwayat untuk lihat detail laporan.</p>
+            `;
+        }
+
+        async function deleteSingleHistory(e, id) {
+            e.stopPropagation();
+            if (!confirm("Apakah Anda yakin ingin menghapus item riwayat ini?")) return;
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/investigations/${id}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error(`Status ${res.status}`);
+                if (activeHistoryDetailId === id) resetHistoryDetail();
+                loadHistory();
+            } catch (err) {
+                alert("Gagal menghapus riwayat: " + err.message);
+            }
+        }
+
+        async function deleteSelected() {
+            const ids = Array.from(selectedHistoryIds);
+            if (!ids.length) return;
+            if (!confirm(`Apakah Anda yakin ingin menghapus ${ids.length} item riwayat terpilih?`)) return;
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/investigations`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ids: ids })
+                });
+                if (!res.ok) throw new Error(`Status ${res.status}`);
+                if (selectedHistoryIds.has(activeHistoryDetailId)) resetHistoryDetail();
+                loadHistory();
+            } catch (err) {
+                alert("Gagal menghapus riwayat terpilih: " + err.message);
+            }
+        }
+
+        async function deleteAllHistory() {
+            if (!confirm("Apakah Anda yakin ingin menghapus SEMUA riwayat investigasi? Tindakan ini tidak dapat dibatalkan.")) return;
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/investigations`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ids: [] })
+                });
+                if (!res.ok) throw new Error(`Status ${res.status}`);
+                resetHistoryDetail();
+                loadHistory();
+            } catch (err) {
+                alert("Gagal menghapus semua riwayat: " + err.message);
+            }
+        }
+
+        async function showHistoryDetail(id) {
+            activeHistoryDetailId = id;
+            const detailEl = document.getElementById('history-detail');
+            detailEl.innerHTML = '<p class="text-xs text-light-text-muted dark:text-text-muted p-6">Memuat detail...</p>';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/investigations/${id}`);
+                if (!response.ok) throw new Error(`Status ${response.status}`);
+                const record = await response.json();
+                const report = record.report;
+
+                detailEl.innerHTML = `
+                    <div class="space-y-6 text-left">
+                        <div class="bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 rounded-2xl p-6 space-y-2">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="px-3 py-1 rounded-full text-[10px] font-medium code-font border ${badgeClasses(report.risk_level)}">${escapeHtml(report.risk_level)} RISK</span>
+                                <span class="text-[11px] code-font text-light-text-muted dark:text-text-muted">Score: <span class="text-slate-900 dark:text-white font-bold">${report.risk_score}</span>/100</span>
+                            </div>
+                            <p class="text-xs text-light-text-muted dark:text-text-muted">${formatDate(record.created_at)}</p>
+                            <p class="text-xs text-light-text-muted dark:text-text-muted leading-relaxed">${escapeHtml(report.evidence_summary)}</p>
+                        </div>
+
+                        <div class="bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 rounded-2xl p-6 space-y-2">
+                            <span class="text-xs font-medium text-slate-900 dark:text-white block border-b border-light-border dark:border-white/10 pb-3 mb-1">Red Flags (${report.red_flags.length})</span>
+                            ${report.red_flags.length === 0
+                                ? '<p class="text-xs text-light-text-muted dark:text-text-muted">Tidak ada indikator merah.</p>'
+                                : report.red_flags.map(f => `
+                                    <div class="p-3 rounded-xl bg-light-secondary dark:bg-[#16181C] border border-light-border dark:border-white/5 space-y-1">
+                                        <h4 class="text-xs font-medium text-slate-900 dark:text-white">${escapeHtml(f.type)}</h4>
+                                        <p class="text-[11px] text-light-text-muted dark:text-text-muted">${escapeHtml(f.description)}</p>
+                                    </div>
+                                `).join("")}
+                        </div>
+
+                        <div class="bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 rounded-2xl p-5 space-y-2">
+                            <span class="text-[11px] code-font text-light-text-muted dark:text-text-muted uppercase block">Penalaran AI</span>
+                            <p class="text-xs text-light-text-muted dark:text-text-muted leading-relaxed">${escapeHtml(report.reasoning)}</p>
+                        </div>
+
+                        <div class="bg-light-surface dark:bg-[#0D0E11] border border-light-border dark:border-white/10 rounded-2xl p-5 space-y-2">
+                            <span class="text-[11px] code-font text-light-text-muted dark:text-text-muted uppercase block">Rekomendasi</span>
+                            <ul class="space-y-1.5 text-xs text-light-text-muted dark:text-text-muted">
+                                ${(report.recommendation || []).map(a => `<li>• ${escapeHtml(a)}</li>`).join("")}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            } catch (err) {
+                detailEl.innerHTML = '<p class="text-xs text-red-500 p-6">Gagal memuat detail investigasi.</p>';
+            }
+        }
+    </script>
+</body>
+</html>

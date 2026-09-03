@@ -22,7 +22,18 @@ DATABASE_URL = os.getenv("DATABASE_URL") or "sqlite:///./dev.db"
 # connect_args ini cuma dibutuhkan SQLite, diabaikan kalau pakai Postgres beneran
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 
-engine = create_engine(DATABASE_URL, connect_args=connect_args)
+# pool_pre_ping=True: SQLAlchemy ngecek dulu koneksi masih hidup sebelum
+# dipakai, dan otomatis bikin koneksi baru kalau ternyata udah mati --
+# penting buat Postgres serverless kayak Neon yang suka nutup/suspend
+# koneksi yang nganggur, biar gak muncul error
+# "psycopg2.OperationalError: could not receive data from server".
+# pool_recycle=300: paksa bikin ulang koneksi tiap 5 menit biar gak sempat
+# jadi stale duluan sebelum pre_ping sempat ngecek (diabaikan buat SQLite).
+engine_kwargs = {"pool_pre_ping": True}
+if not DATABASE_URL.startswith("sqlite"):
+    engine_kwargs["pool_recycle"] = 300
+
+engine = create_engine(DATABASE_URL, connect_args=connect_args, **engine_kwargs)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 

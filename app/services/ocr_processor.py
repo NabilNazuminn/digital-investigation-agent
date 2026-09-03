@@ -25,7 +25,12 @@ from google.genai import types
 logger = logging.getLogger(__name__)
 
 # Model ringan & cepat, cukup untuk baca teks -- gak perlu model "berpikir" mahal untuk OCR
-OCR_MODEL_NAME = os.getenv("GEMINI_OCR_MODEL", "gemini-2.0-flash")
+# Catatan: Google rutin pensiun-in versi model lama (gemini-2.0-flash sudah
+# di-shutdown Google per 1 Juni 2026). Kalau suatu saat gemini-3.6-flash juga
+# di-shutdown, ganti default di bawah ini (atau set env var GEMINI_OCR_MODEL
+# di .env tanpa perlu ubah kode) ke model Flash terbaru yang tersedia --
+# cek https://ai.google.dev/gemini-api/docs/changelog untuk model terkini.
+OCR_MODEL_NAME = os.getenv("GEMINI_OCR_MODEL", "gemini-3.6-flash")
 
 OCR_PROMPT = (
     "Ekstrak SEMUA teks yang terlihat pada gambar ini apa adanya (verbatim), "
