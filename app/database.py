@@ -13,7 +13,8 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
-DATABASE_URL = os.getenv("DATABASE_URL") or "sqlite:///./dev.db"
+default_sqlite = "sqlite:////tmp/dev.db" if os.getenv("VERCEL") else "sqlite:///./dev.db"
+DATABASE_URL = os.getenv("DATABASE_URL") or default_sqlite
 # Sengaja pakai "or", BUKAN os.getenv(key, default) -- soalnya kalau DATABASE_URL=
 # ada di .env tapi dikosongin, os.getenv bakal balikin string kosong "" (bukan
 # None), dan default di os.getenv cuma kepake kalau key-nya BENERAN gak ada
