@@ -1,14 +1,25 @@
 {
-  "builds": [
+  "cleanUrls": true,
+  "rewrites": [
     {
-      "src": "app/main.py",
-      "use": "@vercel/python"
-    }
-  ],
-  "routes": [
+      "source": "/investigate",
+      "destination": "/api/index.py"
+    },
     {
-      "src": "/(.*)",
-      "dest": "app/main.py"
+      "source": "/investigations",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/investigations/:path*",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/health",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "/api/index.py"
     }
   ]
 }
