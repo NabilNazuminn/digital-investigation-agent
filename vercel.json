@@ -3,23 +3,23 @@
   "rewrites": [
     {
       "source": "/investigate",
-      "destination": "/api/index.py"
+      "destination": "/app/main.py"
     },
     {
       "source": "/investigations",
-      "destination": "/api/index.py"
+      "destination": "/app/main.py"
     },
     {
       "source": "/investigations/:path*",
-      "destination": "/api/index.py"
+      "destination": "/app/main.py"
     },
     {
       "source": "/health",
-      "destination": "/api/index.py"
+      "destination": "/app/main.py"
     },
     {
       "source": "/api/:path*",
-      "destination": "/api/index.py"
+      "destination": "/app/main.py"
     }
   ]
 }
