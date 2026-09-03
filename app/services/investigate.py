@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -35,8 +36,8 @@ def investigate(req: InvestigationRequest, db: Session = Depends(get_db)):
 
     screenshot_path = save_screenshot(req.screenshot_base64) if req.screenshot_base64 else None
 
-    ocr_text: str | None = None
-    ocr_warning: str | None = None
+    ocr_text: Optional[str] = None
+    ocr_warning: Optional[str] = None
     if req.screenshot_base64:
         try:
             ocr_text = extract_text_from_screenshot(req.screenshot_base64)

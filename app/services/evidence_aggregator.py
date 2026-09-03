@@ -1,3 +1,4 @@
+from typing import Optional
 """
 Evidence Aggregator (box 6 di diagram arsitektur).
 
@@ -32,7 +33,7 @@ def _account_checks_to_dict(verification: VerificationResults) -> dict:
 
 
 def build_unified_context(
-    chat_text: str | None,
+    chat_text: Optional[str],
     extracted: ExtractedEntities,
     verification: VerificationResults,
 ) -> UnifiedContext:

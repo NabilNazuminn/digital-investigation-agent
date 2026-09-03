@@ -1,3 +1,4 @@
+from typing import Optional
 """
 Model tabel database (SQLAlchemy ORM) -- BEDA dari schemas.py yang isinya
 Pydantic (buat validasi request/response API).
@@ -26,8 +27,8 @@ class InvestigationRecord(Base):
     )
 
     # Ringkasan input, biar gampang ditampilkan di daftar riwayat tanpa buka detail
-    chat_text_snippet: Mapped[str | None] = mapped_column(String, nullable=True)
-    screenshot_path: Mapped[str | None] = mapped_column(String, nullable=True)
+    chat_text_snippet: Optional[Mapped[str]] = mapped_column(String, nullable=True)
+    screenshot_path: Optional[Mapped[str]] = mapped_column(String, nullable=True)
 
     # Hasil dari AI Agent
     risk_score: Mapped[int] = mapped_column(Integer)

@@ -1,3 +1,4 @@
+from typing import Optional
 """
 Information Extractor (box 4 di diagram arsitektur).
 
@@ -33,7 +34,7 @@ def _dedupe(items: list[str]) -> list[str]:
     return list(dict.fromkeys(items))
 
 
-def _extract_domain(url: str) -> str | None:
+def _extract_domain(url: str) -> Optional[str]:
     try:
         netloc = urlparse(url).netloc
         return netloc or None
@@ -87,12 +88,12 @@ def merge_with_manual_input(
 
 
 def extract_all_entities(
-    chat_text: str | None,
-    ocr_text: str | None,
-    manual_urls: list[str] | None = None,
-    manual_phone_numbers: list[str] | None = None,
-    manual_bank_accounts: list[str] | None = None,
-    manual_emails: list[str] | None = None,
+    chat_text: Optional[str],
+    ocr_text: Optional[str],
+    manual_urls: Optional[list[str]] = None,
+    manual_phone_numbers: Optional[list[str]] = None,
+    manual_bank_accounts: Optional[list[str]] = None,
+    manual_emails: Optional[list[str]] = None,
 ) -> ExtractedEntities:
     """Entry point utama dipanggil dari endpoint: gabungkan chat_text + ocr_text
     + input manual jadi satu ExtractedEntities."""

@@ -1,3 +1,4 @@
+from typing import Optional
 """
 History Repository -- fungsi buat simpan & ambil riwayat investigasi dari
 database. Endpoint (investigate.py) manggil fungsi-fungsi di sini, gak
@@ -14,8 +15,8 @@ from app.models.db_models import InvestigationRecord
 
 def save_investigation(
     db: Session,
-    chat_text: str | None,
-    screenshot_path: str | None,
+    chat_text: Optional[str],
+    screenshot_path: Optional[str],
     report: dict,
 ) -> InvestigationRecord:
     """Simpan 1 hasil investigasi ke database. `report` = dict hasil dari
@@ -45,7 +46,7 @@ def list_investigations(db: Session, limit: int = 20) -> list[InvestigationRecor
     )
 
 
-def get_investigation(db: Session, investigation_id: str) -> InvestigationRecord | None:
+def get_investigation(db: Session, investigation_id: str) -> Optional[InvestigationRecord]:
     """Ambil 1 hasil investigasi lengkap berdasarkan id."""
     return db.query(InvestigationRecord).filter(InvestigationRecord.id == investigation_id).first()
 
