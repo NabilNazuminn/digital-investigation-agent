@@ -6,11 +6,13 @@ load_dotenv()  # HARUS dipanggil SEBELUM import apapun dari app/,
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.database import init_db
 from app.routers.investigate import router as investigate_router
 
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -66,3 +68,23 @@ def on_startup():
 def health_check():
     """Cek server hidup. Buka http://127.0.0.1:8000/health setelah run."""
     return {"status": "ok"}
+
+
+# Serve frontend (index.html) langsung dari FastAPI yang sama -- ini KHUSUS
+# buat deployment single-service (misal Render), di mana index.html ada di
+# folder static/ dan di-serve bareng backend-nya.
+#
+# Kalau frontend-nya di-serve terpisah sama platform hosting-nya sendiri
+# (misal Vercel, yang otomatis serve index.html di root project sebagai
+# static file lewat mekanismenya sendiri, TANPA folder static/), folder
+# "static/" ini gak bakal ada sama sekali di environment itu. StaticFiles()
+# bakal RAISE ERROR kalau folder yang di-mount gak ketemu -- makanya di-cek
+# dulu keberadaannya sebelum di-mount, biar main.py yang SAMA bisa dipakai
+# di kedua jenis deployment tanpa perlu diubah manual tiap pindah platform.
+#
+# HARUS didaftarkan PALING TERAKHIR (setelah semua route API di atas),
+# karena StaticFiles(html=True) yang di-mount di "/" itu semacam catch-all --
+# kalau didaftarkan duluan, dia bakal "nyamber" semua request sebelum sempat
+# ke route API manapun.
+if os.path.isdir("static"):
+    app.mount("/", StaticFiles(directory="static", html=True), name="static")
